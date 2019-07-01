@@ -1,2 +1,2 @@
 # Compiler
-Compiler of a based Python language
+Compiler that works with based Python language
