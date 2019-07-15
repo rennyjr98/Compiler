@@ -6,7 +6,6 @@ package control;
 
 public class Productions {
     public static int[] getProduction(int fila) {
-        System.out.println("Fila : " + (fila-1));
         return productions[fila-1];
     }
     
@@ -15,49 +14,19 @@ public class Productions {
     }
     
     private static final int
-        PROGRAM = 701,
-        CONST = 705,
-        CONSTENTIRE = 706,
-        LISTUPRANGO = 707,
-        TERMPASCAL = 711,
-        ELEVATION = 713,
-        SIMPLEEXPPAS = 715,
-        FACTOR = 717,
-        NOT = 722,
-        OR = 724,
-        OPBIT = 726,
-        AND = 728,
-        ANDLOG = 730,
-        ORLOG = 732,
-        XORLOG = 734,
-        EST = 736,
-        ASIGN = 741,
-        FUNLIST = 742,
-        ARR = 743,
-        EXPPAS = 747,
+        PROGRAM = 701, CONST = 705, CONSTENTIRE = 706, LISTUPRANGO = 707,
+        TERMPASCAL = 711, ELEVATION = 713, SIMPLEEXPPAS = 715, FACTOR = 717,
+        NOT = 722, OR = 724, OPBIT = 726, AND = 728,
+        ANDLOG = 730, ORLOG = 732, XORLOG = 734, EST = 736,
+        ASIGN = 741, FUNLIST = 742, ARR = 743, EXPPAS = 747,
         FUNCIONES = 749;
     
     public static int [] idProductions = {
-        PROGRAM,
-        CONST,
-        CONSTENTIRE,
-        LISTUPRANGO,
-        TERMPASCAL,
-        ELEVATION,
-        SIMPLEEXPPAS,
-        FACTOR,
-        NOT,
-        OR,
-        OPBIT,
-        AND,
-        ANDLOG,
-        ORLOG,
-        XORLOG,
-        EST,
-        ASIGN,
-        FUNLIST,
-        ARR,
-        EXPPAS,
+        PROGRAM, CONST, CONSTENTIRE, LISTUPRANGO,
+        TERMPASCAL, ELEVATION, SIMPLEEXPPAS, FACTOR,
+        NOT, OR, OPBIT, AND,
+        ANDLOG, ORLOG, XORLOG, EST,
+        ASIGN, FUNLIST, ARR,EXPPAS,
         FUNCIONES
     };
     

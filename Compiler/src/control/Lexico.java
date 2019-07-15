@@ -1,6 +1,6 @@
 package control;
 
-import design.AppMonitor;
+import design.MonitorView;
 
 /**
  *   @author rennyjr
@@ -21,6 +21,8 @@ public class Lexico extends Analyzer {
     
     /*  -------------------------------------------------------------
         Cabecera de la matriz y Descripcion de errores abajo del todo
+        
+        * Arregla el desmadre de memoria
         ------------------------------------------------------------- */
     
     public Lexico(int [][] transitionTable) {
@@ -35,8 +37,7 @@ public class Lexico extends Analyzer {
         char actualChar;
         
         for(int i = 0; i < code.length(); i++) {
-            if(actualState == 0 && (code.charAt(i) >= '0' && 
-                    code.charAt(i) <= '9'))
+            if(actualState == 0 && isNumerical(code.charAt(i)))
                 i = complexNumberAnalyze(code, i);
             
             actualChar = code.charAt(i);
@@ -58,14 +59,18 @@ public class Lexico extends Analyzer {
                 actualLine++;
         }
         
-        AppMonitor.vitals += "------------------------------------------------"
+        MonitorView.vitals += "------------------------------------------------"
                 + "-----------\n\n";
+    }
+    
+    private boolean isNumerical(char actualChar) {
+    	return actualChar >= '0' && actualChar <= '9';
     }
     
     private void setVitals(char actualChar) {
         if(actualChar == ' ' || actualChar == '\n')
             actualChar = '¨';
-        AppMonitor.vitals += "[Lexico] Caracter a procesar " + actualChar +
+        MonitorView.vitals += "[Lexico] Caracter a procesar " + actualChar +
                 "\n[Lexico] Estado actual " + actualState + "\n" +
                 "[Lexico] Lexema actual '" + actualLexema.trim() + "'\n" +
                 "[Lexico] Columna actual " + actualColumn + "\n" +
@@ -114,6 +119,7 @@ public class Lexico extends Analyzer {
         else if(actualState == -46) actualState = -10;
         
         addToken();
+        Counter.setCounter(actualState);
         backToInitialState(); 
         return amount;
     }
@@ -168,7 +174,7 @@ public class Lexico extends Analyzer {
     
     private void addToken() {
         Token token = new Token(actualLine, actualState, actualLexema.trim());
-        this.listToken.add(token);
+        Analyzer.listToken.add(token);
     }
     
     private int responseToError() {
@@ -183,7 +189,7 @@ public class Lexico extends Analyzer {
         int indexError = actualState - 500;
         Error error = new Error(actualLine, actualState, "Lexico", 
                 descriptionLexicoError[indexError], actualLexema.trim());
-        this.listError.add(error);
+        Analyzer.listError.add(error);
     }
     
     public int complexNumberAnalyze(String code, int actualIndexInCode) {
@@ -238,8 +244,8 @@ public class Lexico extends Analyzer {
     }
     
     public void cleanLists() {
-        this.listToken.clear();
-        this.listError.clear();
+        Analyzer.listToken.clear();
+        Analyzer.listError.clear();
     }
     
     public static boolean isSpecialWord(String word) {

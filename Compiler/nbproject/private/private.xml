@@ -3,11 +3,9 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/home/rennyjr/NetBeansProjects/Compi_v2/src/design/AppMonitor.java</file>
-            <file>file:/home/rennyjr/NetBeansProjects/Compi_v2/src/design/AppStyle.java</file>
-            <file>file:/home/rennyjr/NetBeansProjects/Compi_v2/src/design/App.java</file>
-            <file>file:/home/rennyjr/NetBeansProjects/Compi_v2/src/control/Lexico.java</file>
-            <file>file:/home/rennyjr/NetBeansProjects/Compi_v2/src/control/Syntax.java</file>
+            <file>file:/home/rennyjr/NetBeansProjects/Compiler/Compiler/src/control/FilesManager.java</file>
+            <file>file:/home/rennyjr/NetBeansProjects/Compiler/Compiler/src/design/AppStyle.java</file>
+            <file>file:/home/rennyjr/NetBeansProjects/Compiler/Compiler/src/design/App.java</file>
         </group>
     </open-files>
 </project-private>

@@ -5,15 +5,15 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Toolkit;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import javax.swing.BorderFactory;
-import javax.swing.BoundedRangeModel;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
@@ -29,63 +29,64 @@ import javax.swing.text.StyleContext;
 **/
 
 public class AppStyle extends JFrame {
-    protected Dimension screenSize = Toolkit.getDefaultToolkit()
-            .getScreenSize();
-    
     protected JTextArea codeLines = new JTextArea();
     protected static JTextPane codeArea = new JTextPane();
+    protected JScrollPane codeAreaScroll = new JScrollPane(codeArea);
+    
     protected JTable tokensTable = new JTable(10, 3);
     protected JTable errorsTable = new JTable(10, 4);
+    
     public static Font actualFont = new Font("Hack", Font.BOLD, 14);
+    
     protected DefaultTableModel modelToken = new DefaultTableModel();
     protected DefaultTableModel modelError = new DefaultTableModel();
+    
     protected JButton run = new JButton();
     protected JButton add = new JButton();
     protected JButton export = new JButton();
     protected JButton settings = new JButton();
     protected JButton monitor = new JButton();
     
+    
+    protected JLabel titleToken = new JLabel("Tokens");
+    protected JLabel titleError = new JLabel("Errors");
+    
+    protected JScrollPane tokenTableScroll = new JScrollPane(tokensTable);
+    protected JScrollPane errorTableScroll = new JScrollPane(errorsTable);
+    
+    JPanel tableTitlesArea = new JPanel(null);
+    JPanel header = new JPanel(null);
+    
     protected AppStyle() {
         this.setTitle("Compilador");
         
         init();
+        resizeComponent();
+        
+        this.addComponentListener(new ComponentAdapter() {
+            public void componentResized(ComponentEvent componentEvent) {
+                resizeComponent();
+            }
+        });
+        
         this.setVisible(true);
+        this.setMinimumSize(new Dimension(800, 600));
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
     
     protected void init() {
         JPanel main = new JPanel(null);
-        JPanel header = new JPanel(null);
-        JPanel tableTitlesArea = new JPanel(null);
-        JScrollPane codeLinesScroll = new JScrollPane(codeLines);
-        JScrollPane codeAreaScroll = new JScrollPane(codeArea);
-        JScrollPane tokenTableScroll = new JScrollPane(tokensTable);
-        JScrollPane errorTableScroll = new JScrollPane(errorsTable);
-        JLabel titleToken = new JLabel("Tokens");
-        JLabel titleError = new JLabel("Errors");
         
-        formatCodeComponents(main, header, codeLinesScroll, codeAreaScroll);
+        formatCodeComponents(main, header);
         formatTableTitlesArea(tableTitlesArea);
         
-        int [] titleTokenTableOnAreaLocation = {(screenSize.width/4)-30, 20};
-        formatTitlesTableOnArea(titleToken, titleTokenTableOnAreaLocation);
-        int [] titleErrorTableOnAreaLocation = {((screenSize.width/4)*3)-28, 
-            20};
-        formatTitlesTableOnArea(titleError, titleErrorTableOnAreaLocation);
+        formatTitlesTableOnArea(titleToken);
+        formatTitlesTableOnArea(titleError);
         
-        int [] tokensLocation = {0, 570};
-        formatTables(tokenTableScroll, tokensTable, tokensLocation);
-        int [] errorsLocation = {screenSize.width/2, 570};
-        formatTables(errorTableScroll, errorsTable, errorsLocation);
+        formatTables(tokenTableScroll, tokensTable);
+        formatTables(errorTableScroll, errorsTable);
         formatButtons(header);
-        
-        JScrollBar codeAreaVerticalScroll = codeLinesScroll
-                .getVerticalScrollBar();
-        BoundedRangeModel codeLinesModel = codeAreaScroll.
-                getVerticalScrollBar().getModel();
-        
-        codeAreaVerticalScroll.setModel(codeLinesModel);
         
         header.add(run);
         header.add(add);
@@ -97,7 +98,6 @@ public class AppStyle extends JFrame {
         tableTitlesArea.add(titleError);
         
         main.add(header);
-        main.add(codeLinesScroll);
         main.add(codeAreaScroll);
         main.add(tableTitlesArea);
         main.add(tokenTableScroll);
@@ -106,46 +106,57 @@ public class AppStyle extends JFrame {
         this.getContentPane().add(main);
     }
     
+    protected void resizeComponent() {
+        int halfScreenSize = this.getWidth()/2;
+        
+        header.setSize(this.getWidth(), 40);
+        
+        codeAreaScroll.setSize(this.getWidth(), (int)(this.getHeight()*.645));
+        run.setLocation(halfScreenSize-16, 4);
+        add.setLocation(30, 4);
+        export.setLocation(72, 4);
+        settings.setLocation(this.getWidth()-62, 5);
+        monitor.setLocation(112, 5);
+        
+        tableTitlesArea.setLocation(0, (int)(this.getHeight()*.645)+40);
+        tableTitlesArea.setSize(this.getWidth(), 30);
+        
+        titleToken.setLocation(halfScreenSize/2-40, 5);
+        titleError.setLocation(halfScreenSize+(halfScreenSize/2), 5);
+        
+        int heighTables = this.getHeight()-tableTitlesArea.getY() - 70;
+        tokenTableScroll.setLocation(0, tableTitlesArea.getY()+30);
+        tokenTableScroll.setSize(halfScreenSize, heighTables);
+        errorTableScroll.setLocation(halfScreenSize, tableTitlesArea.getY()+30);
+        errorTableScroll.setSize(halfScreenSize, heighTables);
+    }
+    
     protected void formatCodeComponents(Object ... components) {
         formatMainPanel((JPanel)components[0]);
         formatHeader((JPanel)components[1]);
         formatCodeLines();
-        formatCodeLinesScroll((JScrollPane)components[2]);
         formatCodeArea();
-        formatCodeAreaScroll((JScrollPane)components[3]);
+        formatCodeAreaScroll(codeAreaScroll);
     }
     
     protected void formatMainPanel(JPanel main) {
         main.setLocation(0, 0);
-        main.setSize(screenSize.width, screenSize.height-50);
+        main.setSize(2080, 1080);
     }
     
     protected void formatHeader(JPanel header) {
-        header.setSize(screenSize.width, 40);
         header.setLocation(0,0); // 33
         header.setBackground(new Color(44,44,44));
     }
     
     protected void formatCodeLines() {
-        codeLines.setText("    1");
-        codeArea.setFont(actualFont);
+        codeLines.setText("1");
+        codeLines.setFont(actualFont);
+        codeLines.setEditable(false);
         codeLines.setForeground(new Color(5,255,113));
         codeLines.setBackground(new Color(12,12,12));
-    }
-    
-    protected void formatCodeLinesScroll(JScrollPane codeLinesScroll) {
-        codeLinesScroll.setForeground(new Color(2,166,118));
-        codeLinesScroll.setBackground(new Color(22,22,22));
-        codeLinesScroll.setLocation(0, 40);
-        codeLinesScroll.setBorder(null);
-        codeLinesScroll.setSize(40, 500);
-        
-        codeLinesScroll.setBorder(BorderFactory.createMatteBorder(4,4,4,4, 
+        codeLines.setBorder(BorderFactory.createMatteBorder(4,8,4,8, 
                 new Color(12,12,12)));
-        codeLinesScroll.setVerticalScrollBarPolicy(
-                JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-        codeLinesScroll.setHorizontalScrollBarPolicy(
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
     }
     
     protected void formatCodeArea() {
@@ -153,35 +164,30 @@ public class AppStyle extends JFrame {
         codeArea.setCaretColor(Color.WHITE);
         codeArea.setForeground(Color.WHITE);
         codeArea.setBackground(new Color(22,22,22));
-        codeArea.setBorder(BorderFactory.createMatteBorder(4,4,4,4, 
+        codeArea.setBorder(BorderFactory.createMatteBorder(4,8,4,8, 
                 new Color(22,22,22)));
     }
     
     protected void formatCodeAreaScroll(JScrollPane codeAreaScroll) {
-        codeAreaScroll.setLocation(40, 40);
+        codeAreaScroll.setLocation(0, 40);
         codeAreaScroll.setBorder(null);
-        codeAreaScroll.setSize(screenSize.width-40, 500);
+        codeAreaScroll.getViewport().add(codeArea);
+        codeAreaScroll.setRowHeaderView(codeLines);
+        codeAreaScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
     }
     
     protected void formatTableTitlesArea(JPanel tableTitlesArea) {
-        tableTitlesArea.setLocation(0, 520);
-        tableTitlesArea.setSize(screenSize.width,50);
         tableTitlesArea.setBackground(new Color(44,44,44));
     }
     
-    protected void formatTitlesTableOnArea(JLabel title, int [] location) {
+    protected void formatTitlesTableOnArea(JLabel title) {
         title.setSize(100,30);
         title.setForeground(Color.WHITE);
-        title.setLocation(location[0], location[1]);
     }
     
-    protected void formatTables(JScrollPane tableScroll, JTable table, 
-            int [] location) {
-        
+    protected void formatTables(JScrollPane tableScroll, JTable table) {
         DefaultTableModel modelTable = getModel(table);
         table.setModel(modelTable);
-        tableScroll.setLocation(location[0], location[1]);
-        tableScroll.setSize(screenSize.width/2,150);
     }
     
     protected DefaultTableModel getModel(JTable table) {
@@ -195,23 +201,18 @@ public class AppStyle extends JFrame {
         
         setCleanButton(run);
         run.setSize(32, 32);
-        run.setLocation((header.getWidth()/2)-16, 4);
         
         setCleanButton(add);
         add.setSize(32, 32);
-        add.setLocation(30, 4);
         
         setCleanButton(export);
         export.setSize(32,32);
-        export.setLocation(72, 4);
         
         setCleanButton(settings);
         settings.setSize(32, 32);
-        settings.setLocation(header.getWidth()-62, 5);
         
         setCleanButton(monitor);
         monitor.setSize(32, 32);
-        monitor.setLocation(112, 5);
     }
     
     protected void setCleanButton(JButton btn) {
@@ -220,11 +221,12 @@ public class AppStyle extends JFrame {
     }
     
     protected void setIcons() {
-        Icon addIcon = new ImageIcon("src/res/img/file.png");
-        Icon runIcon = new ImageIcon("src/res/img/play-button.png");
-        Icon exportIcon = new ImageIcon("src/res/img/download.png");
-        Icon settingsIcon = new ImageIcon("src/res/img/settings.png");
-        Icon monitorIcon = new ImageIcon("src/res/img/console.png");
+    	String prefix = "/home/rennyjr/NetBeansProjects/Compiler/Compiler/";
+        Icon addIcon = new ImageIcon(prefix + "src/res/img/file.png");
+        Icon runIcon = new ImageIcon(prefix + "src/res/img/play-button.png");
+        Icon exportIcon = new ImageIcon(prefix + "src/res/img/download.png");
+        Icon settingsIcon = new ImageIcon(prefix + "src/res/img/settings.png");
+        Icon monitorIcon = new ImageIcon(prefix + "src/res/img/console.png");
         
         add.setIcon(addIcon);
         run.setIcon(runIcon);
@@ -265,11 +267,14 @@ public class AppStyle extends JFrame {
         String code = codeArea.getText();
         char lastChar = code.charAt(code.length()-1);
         
-        if(lastChar == ' ')
-            return " ";
-        else if(lastChar == '\n')
-            return "\n";
-        else return "";
+        switch(lastChar) {
+            case ' ':
+                return " ";
+            case '\n':
+                return "\n";
+            default:
+                return "";
+        }
     }
     
     protected void appendToPane(JTextPane tp, String msg, Color c) {

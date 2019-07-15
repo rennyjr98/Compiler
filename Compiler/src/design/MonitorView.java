@@ -11,13 +11,13 @@ import javax.swing.JTextPane;
  *    @author rennyjr
 **/
 
-public class AppMonitor extends JFrame {
+public class MonitorView extends JFrame {
     private JScrollPane scroll_vitals;
     private JTextPane pane_vitals;
     public static String vitals = "[*] Sistema Inicializado.\n"
             + "-----------------------------------------------------------\n\n";
     
-    public AppMonitor() {
+    public MonitorView() {
         this.setSize(800, 400);
         this.setTitle("Monitor");
         this.setLocationRelativeTo(null);

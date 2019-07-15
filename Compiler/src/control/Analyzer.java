@@ -10,7 +10,7 @@ public class Analyzer {
     protected static LinkedList<Token> listToken;
     protected static LinkedList<Error> listError;
     
-    /* Lista de descripciones abajo del todo */
+    // Mapeo para contadores
     
     public Analyzer() {
         listToken = new LinkedList<Token>();

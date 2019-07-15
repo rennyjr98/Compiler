@@ -13,13 +13,13 @@ import javax.swing.JPanel;
  *    @author rennyjr
 **/
 
-public class AppFont extends JFrame implements ActionListener {
+public class FontView extends JFrame implements ActionListener {
     private JComboBox fonts;
     private JComboBox fontWeight;
     private JComboBox fontSize;
     private JButton accept;
     
-    public AppFont() {
+    public FontView() {
         this.setSize(390, 125);
         
         init();

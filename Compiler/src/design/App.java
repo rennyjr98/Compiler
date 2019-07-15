@@ -12,6 +12,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.Element;
 
 /**
  *     @author rennyjr
@@ -20,7 +23,7 @@ import javax.swing.JOptionPane;
 public class App extends AppStyle implements KeyListener, ActionListener {
     private Lexico lexico;
     private Syntax syntax;
-    private AppFont appFont;
+    private FontView appFont;
     
     public App() {
         super();
@@ -37,10 +40,8 @@ public class App extends AppStyle implements KeyListener, ActionListener {
         for(int i = 0; i < columnErrorsTable.length;i++) 
             modelError.addColumn(columnErrorsTable[i]);
         
-        int [][] tmpTransitionTable = FilesManager.getLexicoMatriz();
-        lexico = new Lexico(tmpTransitionTable);
-        tmpTransitionTable = FilesManager.getSyntaxMatriz();
-        syntax = new Syntax(tmpTransitionTable);
+        lexico = new Lexico(FilesManager.getLexicoMatriz());
+        syntax = new Syntax(FilesManager.getSyntaxMatriz());
         
         run.addActionListener(this);
         add.addActionListener(this);
@@ -52,42 +53,20 @@ public class App extends AppStyle implements KeyListener, ActionListener {
     
     @Override
     public void keyTyped(KeyEvent e) {
-        switch(e.getKeyCode()) {
-            case KeyEvent.VK_ENTER:
-            case KeyEvent.VK_BACK_SPACE:
-                codeLines.setText("");
-                setLinesOfCode();
-                break;
-            case KeyEvent.VK_F6:
-                break;
-        }
+        codeLines.setText(getText());
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        switch(e.getKeyCode()) {
-            case KeyEvent.VK_ENTER:
-            case KeyEvent.VK_BACK_SPACE:
-                codeLines.setText("");
-                setLinesOfCode();
-                break;
-        }
+        codeLines.setText(getText());
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-        //setColorToLastWord();
-        
-        switch(e.getKeyCode()) {
-            case KeyEvent.VK_ENTER:
-            case KeyEvent.VK_BACK_SPACE:
-                codeLines.setText("");
-                setLinesOfCode();
-                break;
-            case KeyEvent.VK_F6:
-                runLexico();
-                runSyntax();
-                break;
+        codeLines.setText(getText());
+        if(e.getKeyCode() == KeyEvent.VK_F6) {
+        	runLexico();
+            runSyntax();
         }
     }
 
@@ -97,32 +76,39 @@ public class App extends AppStyle implements KeyListener, ActionListener {
         
         if(btn.equals(add))
             setNewCode();
-        else if(btn.equals(run)) {
-            try {
-                runLexico();
-                runSyntax();
-                JOptionPane.showMessageDialog(null, "Compilacion Exitosa", 
-                        "Compilacion Exitosa", JOptionPane.INFORMATION_MESSAGE);
-            } catch(Exception error) {
-                JOptionPane.showMessageDialog(null, 
-                        "Ocurrio un error durante la compilacion.", 
-                        "Error de Compilacion", 
-                        JOptionPane.ERROR_MESSAGE);
-                AppMonitor.vitals += "[*] Error Fatal : s" + error.getMessage();
-                lexico.resetLexico();
-                defaultTables();
-            }
-        } else if(btn.equals(settings)) {
-            appFont = new AppFont();
+        else if(btn.equals(run)) 
+                runCompiler();
+        else if(btn.equals(settings)) {
+            appFont = new FontView();
             appFont.setVisible(true);
         } else if(btn.equals(monitor))
-            (new AppMonitor()).show();
+            (new MonitorView()).show();
+        else if(btn.equals(export))
+        	FilesManager.exportExcel();
+    }
+    
+    private void runCompiler() {
+    	try {
+    		runLexico();
+    		runSyntax();
+    		JOptionPane.showMessageDialog(null, "Compilacion Exitosa", 
+                    "Compilacion Exitosa", JOptionPane.INFORMATION_MESSAGE);
+    	}catch(Exception error) {
+            JOptionPane.showMessageDialog(null, "No tengo idea que pudo salir mal.", 
+                    "Error de Compilacion", JOptionPane.ERROR_MESSAGE);
+            MonitorView.vitals += "[*] Error Fatal : " + error.getMessage();
+            resetCompiler();
+        }
+    }
+    
+    private void resetCompiler() {
+    	lexico.resetLexico();
+        defaultTables();
     }
     
     private void setNewCode() {
         codeArea.setText(FilesManager.getCode());
-        codeLines.setText("");
-        setLinesOfCode();
+        codeLines.setText(getText());
     }
     
     private void runLexico() {
@@ -190,29 +176,14 @@ public class App extends AppStyle implements KeyListener, ActionListener {
             modelError.removeRow(i);
     }
     
-    public void setLinesOfCode() {
-        String counts = countLinesOfCode();
-        codeLines.setText(counts);
+    public String getText() {
+        int caretPosition = codeArea.getDocument().getLength();
+		Element root = codeArea.getDocument().getDefaultRootElement();
+		String text = "1\n";
+		for(int i = 2; i < root.getElementIndex( caretPosition ) + 2; i++)
+	            text += i + "\n";
+		return text;
     }
-    
-    public String countLinesOfCode() {
-        String counts = "";
-        
-        /*for(int i = 0; i < codeArea; i++) {
-            int actualLine = i+1;
-            String postfix = actualLine + "\n";
-            
-            if(actualLine < 10)
-                counts += "    " + postfix;
-            else if(actualLine >= 10 && actualLine < 100)
-                counts += "   " + postfix;
-            else
-                counts += " " + postfix;
-        }*/
-        
-        return counts;
-    }
-    
     
     public static void main(String ... args) {
         new App();

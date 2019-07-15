@@ -1,6 +1,6 @@
 package control;
 
-import design.AppMonitor;
+import design.MonitorView;
 import java.util.LinkedList;
 import java.util.Stack;
 
@@ -13,7 +13,7 @@ public class Syntax extends Analyzer {
     private int [][] transitionTable;
     private int [] entriesProductions;
     private Stack<Integer> syntaxStack;
-    private LinkedList<Token> copyTokenList = new LinkedList<>();
+    private LinkedList<Token> copyTokenList = new LinkedList<Token>();
     
     private final int token$ = -100;
     private final int COMMENT = -2;
@@ -24,7 +24,7 @@ public class Syntax extends Analyzer {
     
     public Syntax(int [][] transitionTable) {
         this.transitionTable = transitionTable;
-        actualState = new Integer(0);
+        actualState = 0;
         syntaxStack = new Stack<>();
     }
     
@@ -42,7 +42,7 @@ public class Syntax extends Analyzer {
     }
     
     private void setVitals(String extraAction) {
-        AppMonitor.vitals += "[Syntax] Token actual " + 
+        MonitorView.vitals += "[Syntax] Token actual " + 
                 (copyTokenList.get(0).getToken()) + "\n" +
                 "[Syntax] Lexema actual " + copyTokenList.get(0).getLexema() +
                 "\n" + extraAction + "\n";
@@ -56,7 +56,7 @@ public class Syntax extends Analyzer {
                 checkSyntax();
         }
         
-        AppMonitor.vitals += "------------------------------------------------"
+        MonitorView.vitals += "------------------------------------------------"
                 + "-----------\n\n";
     }
     
@@ -131,7 +131,7 @@ public class Syntax extends Analyzer {
         int column = getColMatrix(copyTokenList.get(0).getToken());
         setVitals("[Syntax] Desde matriz " + transitionTable[row][column] + 
                 " con " + row + ", " + column);
-        return new Integer(transitionTable[row][column]);
+        return transitionTable[row][column];
     }
     
     private int getColMatrix(int token) {
