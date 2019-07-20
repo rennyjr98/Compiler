@@ -174,9 +174,8 @@ public class FilesManager {
         }
     }
     
-    private static void setInformationToPage(Sheet page, String ... information) {
+    private static void setInformationToPage(Row row, Sheet page, String ... information) {
     	for(int i = 0; i < information.length; i++) {
-    		Row row = page.createRow(i+1);
     		Cell celda = row.createCell(i);
     		celda.setCellValue(information[i]);
     	}
@@ -191,6 +190,7 @@ public class FilesManager {
     }
     
     private static void tokenSheet(Workbook workbook) {
+    	int nRow = 1;
     	String pageName = "Token List";
     	String [] header = {"Linea", "Token", "Lexema"};
     	
@@ -199,6 +199,7 @@ public class FilesManager {
     	
     	for(Token token : Analyzer.listToken) {
     		setInformationToPage(
+    				page.createRow(nRow++),
     				page,
     				token.getLine() + "",
     				token.getToken() + "",
@@ -208,6 +209,7 @@ public class FilesManager {
     }
     
     private static void errorSheet(Workbook workbook) {
+    	int nRow = 1;
     	String pageName = "Error List";
         String[] header = {"Linea", "Error", "Tipo", "Descripción", "Lexema"};
     	
@@ -216,6 +218,7 @@ public class FilesManager {
     	
     	for(Error error : Analyzer.listError)
     		setInformationToPage(
+    				page.createRow(nRow++),
     				page,
     				error.getLine() + "",
     				error.getError() + "",
