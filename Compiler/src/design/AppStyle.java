@@ -4,6 +4,7 @@ import control.Lexico;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Toolkit;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -23,6 +24,8 @@ import javax.swing.text.AttributeSet;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
+import javax.swing.text.TabSet;
+import javax.swing.text.TabStop;
 
 /**
  *   @author rennyjr
@@ -61,6 +64,7 @@ public class AppStyle extends JFrame {
         this.setTitle("Compilador");
         
         init();
+        this.setExtendedState(JFrame.MAXIMIZED_BOTH);
         resizeComponent();
         
         this.addComponentListener(new ComponentAdapter() {
@@ -72,7 +76,6 @@ public class AppStyle extends JFrame {
         this.setVisible(true);
         this.setMinimumSize(new Dimension(800, 600));
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
     
     protected void init() {
@@ -160,12 +163,35 @@ public class AppStyle extends JFrame {
     }
     
     protected void formatCodeArea() {
-        codeArea.setFont(actualFont);
         codeArea.setCaretColor(Color.WHITE);
+        codeArea.setFont(actualFont);
         codeArea.setForeground(Color.WHITE);
         codeArea.setBackground(new Color(22,22,22));
         codeArea.setBorder(BorderFactory.createMatteBorder(4,8,4,8, 
                 new Color(22,22,22)));
+        
+    	FontMetrics fm = codeArea.getFontMetrics(codeArea.getFont());
+        int charWidth = fm.charWidth('w');
+        int tabWidth = charWidth * 4;
+
+        TabStop[] tabs = new TabStop[10];
+
+        for (int j = 0; j < tabs.length; j++) {
+             int tab = j + 1;
+             tabs[j] = new TabStop( tab * tabWidth );
+        }
+
+        TabSet tabSet = new TabSet(tabs);
+        SimpleAttributeSet attributes = new SimpleAttributeSet();
+        
+        StyleConstants.setTabSet(attributes, tabSet);
+        StyleConstants.setFontFamily(attributes, actualFont.getFamily());
+        StyleConstants.setFontSize(attributes, actualFont.getSize());
+        StyleConstants.setBold(attributes, true);
+        StyleConstants.setForeground(attributes, Color.WHITE);
+        
+        int length = codeArea.getDocument().getLength();
+        codeArea.getStyledDocument().setParagraphAttributes(0, length, attributes, true);
     }
     
     protected void formatCodeAreaScroll(JScrollPane codeAreaScroll) {
@@ -291,14 +317,5 @@ public class AppStyle extends JFrame {
         
        aset = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.Foreground, Color.white);
        tp.setCharacterAttributes(aset, false);
-    }
-    
-    public static void getFontToCode(Font codeFont) {
-       actualFont = codeFont;
-       setFontToCode();
-    }
-    
-    private static void setFontToCode() {
-        codeArea.setFont(actualFont);
     }
 }

@@ -21,7 +21,6 @@ import javax.swing.text.Element;
 public class App extends AppStyle implements KeyListener, ActionListener {
     private Lexico lexico;
     private Syntax syntax;
-    private FontView appFont;
     
     public App() {
         super();
@@ -76,10 +75,7 @@ public class App extends AppStyle implements KeyListener, ActionListener {
             setNewCode();
         else if(btn.equals(run)) 
                 runCompiler();
-        else if(btn.equals(settings)) {
-            appFont = new FontView();
-            appFont.setVisible(true);
-        } else if(btn.equals(monitor))
+        else if(btn.equals(monitor))
             (new MonitorView()).show();
         else if(btn.equals(export))
         	FilesManager.exportExcel();
