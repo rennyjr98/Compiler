@@ -1,8 +1,12 @@
 package control;
 
+import design.MonitorView;
+
 public class Counter {
+	private static final int sizeOfCounts = 21;
 	private static int [] lexicalCounts = new int[21];
-	
+    private static int [] entriesProductions = new int[21];
+    
 	/* 
 	  ------------------------------------------
 	   DECLARACIÓN DE CONSTANTES DE POSICIÓN EN
@@ -10,11 +14,33 @@ public class Counter {
 	  ------------------------------------------ 
 	*/
 	
+    public static void clearCounters() {
+    	lexicalCounts = new int[sizeOfCounts];
+    	entriesProductions = new int[sizeOfCounts];
+    }
+    
+	public static void clearArray() {
+		lexicalCounts = new int[21];
+	}
+	
+	public static int[] getProductionsCounter() {
+		return entriesProductions;
+	}
+	
+	public static void setCounterProduction(int production) {
+		for(int i = 0; i < Productions.idProductions.length; i++) {
+            if(production == Productions.idProductions[i])
+                entriesProductions[i]++;
+        }
+	}
+	
 	public static int[] getCounters() {
 		return lexicalCounts;
 	}
 	
 	public static void setCounter(int type) {
+		MonitorView.vitals += "Counter type : " + type + "\n\n";
+		
 		if(type == -1)
 			lexicalCounts[identificadores]++;
 		else if(type == -2 || type == -3)
@@ -39,7 +65,7 @@ public class Counter {
 			lexicalCounts[agrup]++;
 		else if(type == -98 || type == -93)
 			lexicalCounts[identidad]++;
-		else if(type <= -52 && type <= -92)
+		else if(type <= -52 && type >= -92)
 			lexicalCounts[reservP]++;
 		else
 			checkForErrors(type);
@@ -90,7 +116,7 @@ public class Counter {
 	}
 	
 	private static boolean isAgrup(int type) {
-		return type == -45 || (type <= -47 && type <= -51) || 
+		return type == -45 || (type <= -47 && type >= -51) || 
 				type == -97;
 	}
 	

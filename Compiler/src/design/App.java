@@ -1,6 +1,7 @@
 package design;
 
 import control.Analyzer;
+import control.Counter;
 import control.FilesManager;
 import control.Lexico;
 import control.Syntax;
@@ -25,6 +26,7 @@ public class App extends AppStyle implements KeyListener, ActionListener {
     public App() {
         super();
         preparedComponents();
+        codeArea.requestFocus();
     }
     
     public void preparedComponents() {
@@ -56,15 +58,18 @@ public class App extends AppStyle implements KeyListener, ActionListener {
     @Override
     public void keyPressed(KeyEvent e) {
         codeLines.setText(getText());
+        
+        if(e.isControlDown()) {
+        	if(e.getKeyCode() == KeyEvent.VK_E)
+        		FilesManager.exportExcel();
+        }
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
         codeLines.setText(getText());
-        if(e.getKeyCode() == KeyEvent.VK_F6) {
-        	runLexico();
-            runSyntax();
-        }
+        if(e.getKeyCode() == KeyEvent.VK_F6)
+        	runCompiler();
     }
 
     @Override
@@ -82,9 +87,15 @@ public class App extends AppStyle implements KeyListener, ActionListener {
     }
     
     private void runCompiler() {
+    	long iniTime = System.currentTimeMillis();
+    	long finishTime;
+    	
     	try {
     		runLexico();
     		runSyntax();
+    		finishTime = System.currentTimeMillis();
+    		MonitorView.vitals += "Compilation time : " + (finishTime - iniTime) + " ms\n\n";
+    		
     		JOptionPane.showMessageDialog(null, "Compilacion Exitosa", 
                     "Compilacion Exitosa", JOptionPane.INFORMATION_MESSAGE);
     	}catch(Exception error) {
@@ -98,6 +109,7 @@ public class App extends AppStyle implements KeyListener, ActionListener {
     private void resetCompiler() {
     	lexico.resetLexico();
         defaultTables();
+        Counter.clearCounters();
     }
     
     private void setNewCode() {

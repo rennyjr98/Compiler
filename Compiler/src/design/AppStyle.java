@@ -132,6 +132,8 @@ public class AppStyle extends JFrame {
         tokenTableScroll.setSize(halfScreenSize, heighTables);
         errorTableScroll.setLocation(halfScreenSize, tableTitlesArea.getY()+30);
         errorTableScroll.setSize(halfScreenSize, heighTables);
+        
+        codeArea.requestFocus();
     }
     
     protected void formatCodeComponents(Object ... components) {

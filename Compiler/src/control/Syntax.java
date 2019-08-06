@@ -11,7 +11,6 @@ import java.util.Stack;
 public class Syntax extends Analyzer {
     private Integer actualState;
     private int [][] transitionTable;
-    private int [] entriesProductions;
     private Stack<Integer> syntaxStack;
     private LinkedList<Token> copyTokenList = new LinkedList<Token>();
     
@@ -29,7 +28,6 @@ public class Syntax extends Analyzer {
     }
     
     public void prepareTokensForSyntax() {
-        entriesProductions = new int[21];
         copyTokenList = (LinkedList<Token>) listToken.clone();
         
         int listTokenSize = listToken.size() - 1;
@@ -88,7 +86,7 @@ public class Syntax extends Analyzer {
         else if(actualState == EPSILON) {
             setVitals("[Syntax] Epsilon con " + actualState + "\n");
             if(syntaxStack.peek() == EST_EPSILON)
-                entriesProductions[Productions.getIndexOfEST()]++;
+                Counter.setCounterProduction(EST_EPSILON);
             syntaxStack.pop();
         } else if(actualState >= ERROR_INITIAL) {
             addError();
@@ -103,11 +101,12 @@ public class Syntax extends Analyzer {
         Error error = new Error(line, actualState, "Sintaxis", 
                 descriptionSyntaxError[actualState - ERROR_INITIAL], lexema);
         listError.add(error);
+        Counter.setCounter(actualState);
     }
     
     private void addProductionToStack() {
         int [] production = Productions.getProduction(actualState);
-        countEntryToDiagrams(syntaxStack.peek());
+        Counter.setCounterProduction(syntaxStack.peek());
         syntaxStack.pop();
         
         String vitalProduction = "[Syntax] Produccion ";
@@ -117,13 +116,6 @@ public class Syntax extends Analyzer {
         } 
         
         setVitals(vitalProduction);
-    }
-    
-    private void countEntryToDiagrams(int production) {
-        for(int i = 0; i < Productions.idProductions.length; i++) {
-            if(production == Productions.idProductions[i])
-                entriesProductions[i]++;
-        }
     }
     
     private Integer getFromMatrix() {

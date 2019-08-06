@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -152,6 +153,8 @@ public class FilesManager {
         tokenSheet(workbook);
         errorSheet(workbook);
         tokenCountersSheet(workbook);
+        tokenCounterByLine(workbook);
+        productionCounterSheet(workbook);
         
         try {
         	FileOutputStream out = new FileOutputStream(compileResult);
@@ -181,9 +184,8 @@ public class FilesManager {
     	}
     }
     
-    private static void setInformationToPage(Sheet page, int [] information) {
+    private static void setInformationToPage(Row row, Sheet page, int [] information) {
     	for(int i = 0; i < information.length; i++) {
-    		Row row = page.createRow(i+1);
     		Cell celda = row.createCell(i);
     		celda.setCellValue(information[i]);
     	}
@@ -238,7 +240,82 @@ public class FilesManager {
     	
     	Sheet page = workbook.createSheet(pageName);
     	createHeaders(page, header);
+    	Row row = page.createRow(1);
     	
-    	setInformationToPage(page, Counter.getCounters());
+    	setInformationToPage(row, page, Counter.getCounters());
+    }
+    
+    private static void tokenCounterByLine(Workbook workbook) {
+    	String pageName = "Token Counters by Line";
+    	String [] header = {"Linea","Errores", "Identificadores", "Comentarios", 
+    			"Palabras Reservadas", "CE-DEC", "CE-BIN", "CE-HEX", "CE-OCT", 
+    			"CText","CFLOAT", "CNCOMP", "CCAR", "Aritmeticos", "Monogamo", 
+    			"Logico", "Bit", "Identidad", "Puntuacion", "Agrupacion", 
+    			"Asignacion", "Relacional"};
+    	
+    	Sheet page = workbook.createSheet(pageName);
+    	createHeaders(page, header);
+    	sendToWriteCountersByLine(page);
+    }
+    
+    private static void sendToWriteCountersByLine(Sheet page) {
+    	LinkedList <Token> listTokenForCounter = 
+    			(LinkedList <Token>) Analyzer.listToken.clone();
+    	LinkedList <Error> listErrorForCounter = 
+    			(LinkedList <Error>) Analyzer.listError.clone();
+    	
+    	int [] matrix = new int[22];
+    	int lastTokenIndex = Analyzer.getSizeTokens() - 1;
+    	int totalLines = Analyzer.listToken.get(lastTokenIndex).getLine();
+    	
+    	for(int i = 0; i < totalLines; i++) {
+    		Row row = page.createRow(i+1);
+    		Counter.clearArray();
+    		
+    		sendToCountTokenByLine(listTokenForCounter, i+1);
+    		sendToCountErrorByLine(listErrorForCounter, i+1);
+    		int [] tmp = Counter.getCounters();
+    		matrix[0] = i+1;
+    		
+    		for(int j = 1; j < tmp.length; j++)
+    			matrix[j] = tmp[j-1];
+    		
+    		setInformationToPage(row, page, matrix);
+    	}
+    }
+    
+    private static void sendToCountTokenByLine(LinkedList <Token> listToken, int line) {
+    	for(int j = 0; j < listToken.size(); j++) {
+			if(listToken.get(j).getLine() == line) {
+				Token token = listToken.remove(j);
+				Counter.setCounter(token.getToken());
+				j--;
+			}
+		}
+    }
+    
+    private static void sendToCountErrorByLine(LinkedList <Error> listError, int line) {
+    	for(int j = 0; j < listError.size(); j++) {
+			if(listError.get(j).getLine() == line) {
+				Error error = listError.remove(j);
+				Counter.setCounter(error.getError());
+				j--;
+			}
+		}
+    }
+    
+    private static void productionCounterSheet(Workbook workbook) {
+    	String pageName = "Productions Counters";
+    	String [] header = {"Program", "Constante", "Const-Entero",
+                "List-Up-Rangos", "Term-Pascal", "Elevacion", "Simple-Exp-Pas", 
+                "Factor", "Not", "OR", "OP-BIT", "AND", "ANDLOG", "ORLOG", "XORLOG",
+                "EST", "ASIGN", "FUNLIST", "ARR", "FUNCIONES", "EXP-PAS"};
+    	
+    	Sheet page = workbook.createSheet(pageName);
+    	createHeaders(page, header);
+    	Row row = page.createRow(1);
+    	setInformationToPage(row, page, Counter.getProductionsCounter());
     }
 }
+
+    

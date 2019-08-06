@@ -26,8 +26,7 @@ public class Productions {
         TERMPASCAL, ELEVATION, SIMPLEEXPPAS, FACTOR,
         NOT, OR, OPBIT, AND,
         ANDLOG, ORLOG, XORLOG, EST,
-        ASIGN, FUNLIST, ARR,EXPPAS,
-        FUNCIONES
+        ASIGN, FUNLIST, ARR,FUNCIONES, EXPPAS
     };
     
     /* ---------- Producciones ---------- */
