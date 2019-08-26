@@ -2,6 +2,10 @@ package control;
 
 import java.util.LinkedList;
 
+import control.templates.Error;
+import control.templates.Token;
+import database.SqlEvent;
+
 /**
  *   @author rennyjr
 **/
@@ -9,6 +13,7 @@ import java.util.LinkedList;
 public class Analyzer {
     protected static LinkedList<Token> listToken;
     protected static LinkedList<Error> listError;
+    protected static SqlEvent sqlEvent = new SqlEvent();
     
     // Mapeo para contadores
     

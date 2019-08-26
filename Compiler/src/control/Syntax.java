@@ -1,8 +1,12 @@
 package control;
 
-import design.MonitorView;
 import java.util.LinkedList;
 import java.util.Stack;
+
+import control.templates.Error;
+import control.templates.Productions;
+import control.templates.Token;
+import database.SqlEvent;
 
 /**
  *   @author rennyjr
@@ -25,6 +29,7 @@ public class Syntax extends Analyzer {
         this.transitionTable = transitionTable;
         actualState = 0;
         syntaxStack = new Stack<>();
+        Ambit.init();
     }
     
     public void prepareTokensForSyntax() {
@@ -39,35 +44,84 @@ public class Syntax extends Analyzer {
         syntaxStack.push(INITIAL_PRODUCTION);
     }
     
-    private void setVitals(String extraAction) {
-        MonitorView.vitals += "[Syntax] Token actual " + 
-                (copyTokenList.get(0).getToken()) + "\n" +
-                "[Syntax] Lexema actual " + copyTokenList.get(0).getLexema() +
-                "\n" + extraAction + "\n";
-    }
-    
     public void analyze() {
         while(!syntaxStack.isEmpty() && !copyTokenList.isEmpty()) {
             if(isComment())
                 removeToken();
             else
-                checkSyntax();
+                checkCode();
         }
-        
-        MonitorView.vitals += "------------------------------------------------"
-                + "-----------\n\n";
     }
     
-    private void checkSyntax() {
-        if(syntaxStack.peek() >= INITIAL_PRODUCTION)
+    private void checkCode() {
+    	if(syntaxStack.peek() == 800) {
+    		syntaxStack.pop();
+    		Ambit.inDeclarationArea();
+    	} else if(syntaxStack.peek() == 801) {
+    		syntaxStack.pop();
+    		Ambit.outDeclarationArea();
+    	} else if(syntaxStack.peek() == 802) {
+    		syntaxStack.pop();
+    		Ambit.inDeclarationAreaLess();
+    	} else if(syntaxStack.peek() > 802) {
+    		forAmbit();
+    	} else if(syntaxStack.peek() >= INITIAL_PRODUCTION)
             analyzeTransition();
         else
             analyzeMatches();
     }
     
+    private void forAmbit() {
+    	if(Ambit.declarationArea)
+    		forDeclarationArea();
+    	
+    	syntaxStack.pop();
+    }
+    
+    private void forDeclarationArea() {
+    	switch(syntaxStack.peek()) {
+    	case 803: Ambit.sendFunction(); break;
+    	case 804: Ambit.sendVariable(); break;
+    	
+    	case 805: case 806: Ambit.sendParam(); break;
+    	
+    	case 807: case 808: case 809: case 810: case 811: case 812:
+    	case 813: case 814: case 815: case 816: case 817:
+    		Ambit.setType(syntaxStack.peek());
+    		break;
+    	case 818: Ambit.tArrUp(); break;
+    	case 819: Ambit.setTupla(); break;
+    	case 820: Ambit.setRange(); break;
+    	case 821: Ambit.setDictionary(); break;
+    	case 822: Ambit.setConjunto(); break;
+    	case 823: Ambit.setArr(); break;
+    	}
+    }
+    
     private void analyzeMatches() {
         if(syntaxStack.peek() == copyTokenList.get(0).getToken()) {
-            setVitals("[Syntax] Match con " + syntaxStack.peek());
+        	if(syntaxStack.peek() == -1) {
+        		Ambit.setIdAmbito(
+        			copyTokenList.get(0).getLexema(),
+        			copyTokenList.get(0).getLine()
+        		);
+        		
+        		if(!Ambit.declarationArea) {
+        			Stack<Integer> stackAmbito = Ambit.getAmbitoStack();
+        			boolean existsSymbol = false;
+        			
+        			for(int i = 0; i < stackAmbito.size(); i++) {
+        				Ambit.symbol.ambito = stackAmbito.get(i);
+	        			if(SqlEvent.ifSymbolExists(Ambit.symbol))
+	        				existsSymbol = true;
+        			}
+        			
+        			if(!existsSymbol) {
+        				Ambit.addAmbitDeclaError();
+        				Ambit.symbol.reset();
+        			}
+        		}
+        	}
             copyTokenList.remove(0);
             syntaxStack.pop();
         } else {
@@ -79,12 +133,10 @@ public class Syntax extends Analyzer {
     
     private void analyzeTransition() {
         actualState = getFromMatrix();
-        setVitals("");
         
         if(actualState != EPSILON && actualState < ERROR_INITIAL) 
-            addProductionToStack();
+        	loadProduction();
         else if(actualState == EPSILON) {
-            setVitals("[Syntax] Epsilon con " + actualState + "\n");
             if(syntaxStack.peek() == EST_EPSILON)
                 Counter.setCounterProduction(EST_EPSILON);
             syntaxStack.pop();
@@ -97,32 +149,24 @@ public class Syntax extends Analyzer {
     private void addError() {
         int line = copyTokenList.get(0).getLine();
         String lexema = copyTokenList.get(0).getLexema();
-        setVitals("[Syntax] Error con " + actualState + " - " + lexema);
         Error error = new Error(line, actualState, "Sintaxis", 
                 descriptionSyntaxError[actualState - ERROR_INITIAL], lexema);
         listError.add(error);
         Counter.setCounter(actualState);
     }
     
-    private void addProductionToStack() {
+    private void loadProduction() {
         int [] production = Productions.getProduction(actualState);
         Counter.setCounterProduction(syntaxStack.peek());
         syntaxStack.pop();
         
-        String vitalProduction = "[Syntax] Produccion ";
-        for(int i = 0; i < production.length; i++) {
-            vitalProduction += " [" + production[i] + "] ";
+        for(int i = 0; i < production.length; i++)
             syntaxStack.push(production[i]);
-        } 
-        
-        setVitals(vitalProduction);
     }
     
     private Integer getFromMatrix() {
         int row = syntaxStack.peek()-INITIAL_PRODUCTION;
         int column = getColMatrix(copyTokenList.get(0).getToken());
-        setVitals("[Syntax] Desde matriz " + transitionTable[row][column] + 
-                " con " + row + ", " + column);
         return transitionTable[row][column];
     }
     

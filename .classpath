@@ -11,5 +11,6 @@
 	<classpathentry kind="lib" path="/home/rennyjr/Documents/Resources/Excel Java/poi-ooxml-3.16.jar"/>
 	<classpathentry kind="lib" path="/home/rennyjr/Documents/Resources/Excel Java/poi-ooxml-schemas-3.16.jar"/>
 	<classpathentry kind="lib" path="/home/rennyjr/Documents/Resources/Excel Java/xmlbeans-2.6.0.jar"/>
+	<classpathentry kind="lib" path="/home/rennyjr/Documents/Resources/Java Database/mysql-connector-java-5.1.18.jar"/>
 	<classpathentry kind="output" path="Compiler/build/classes"/>
 </classpath>

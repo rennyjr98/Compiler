@@ -1,4 +1,4 @@
-package control;
+package control.templates;
 
 /**
  *    @author rennyjr
@@ -31,32 +31,32 @@ public class Productions {
     
     /* ---------- Producciones ---------- */
     private static int [][] productions = {
-        /* 1 */ {-50, 703, 736, -49, 702}, // A1 { Estatutos A2 }
-        /* 2 */ {702, -43, 701, -97, 750, -45, -1, -52}, // def  id ( A4 ) Program ; A1
-        /* 3 */ {702, -43, 705, -28, -1}, // id = Constante ; A1
+        /* 1 */ {802, -50, 703, 736, 801, -49, 702}, // A1 { @801 Estatutos A2 } @802
+        /* 2 */ {702, -43, 701, -97, 750, 800, -45, 803,-1, -52}, // def id @803 ( @800 A4 ) Program ; A1 [Funciones]
+        /* 3 */ {702, 804, -43, 705, -28, -1}, // id = Constante ; @804 A1 [Enviar Variable]
         /* 4 */ {703, 736, -43}, // ; Estatutos A2 
-        /* 5 */ {704, -1, -44}, // , id A3
-        /* 6 */ {704, -1}, // id A3
-        /* 7 */ {-9}, // Const-Flotante
-        /* 8 */ {-5}, // Const-Cadena
-        /* 9 */ {-4}, // Const-Caracter
+        /* 5 */ {704, 805, -1, -44}, // , id @805 A3 [Parametros]
+        /* 6 */ {704, 806, -1}, // id @806 A3 [Parametros]
+        /* 7 */ {-9, 807}, // Const-Flotante @807 [Flotante]
+        /* 8 */ {-5, 808}, // Const-Cadena @808 [Cadena]
+        /* 9 */ {-4, 809}, // Const-Caracter @809 [Caracter]
         /* 10 */ {706}, // CONST-ENTERO
-        /* 11 */ {-10}, // Const-Complejo
-        /* 12 */ {-53}, // true
-        /* 13 */ {-54}, // false
+        /* 11 */ {-10, 810}, // Const-Complejo @810 [Complejo]
+        /* 12 */ {-53, 811}, // true @811 [True]
+        /* 13 */ {-54, 812}, // false @812 [False]
         /* 14 */ {707}, // LIST-TUP-RANGOS
-        /* 15 */ {-56}, // none
-        /* 16 */ {-11}, // Decimal
-        /* 17 */ {-6}, // Binario
-        /* 18 */ {-7}, // Hexadecimal
-        /* 19 */ {-8}, // Octal
-        /* 20 */ {-97, 708, 724, -45}, // ( OR B1 )
-        /* 21 */ {708, 724, -44}, // , OR B1
+        /* 15 */ {-56, 813}, // none @813 [None]
+        /* 16 */ {-11, 814}, // Decimal @814 [Decimal]
+        /* 17 */ {-6, 815}, // Binario @815 [Binario]
+        /* 18 */ {-7, 816}, // Hexadecimal @816 [Hexadecimal]
+        /* 19 */ {-8, 817}, // Octal @817 [Octal]
+        /* 20 */ {819, -97, 708, 818, 724, -45}, // ( OR @818 B1 ) @819
+        /* 21 */ {708, 818, 724, -44}, // , OR @818 B1
         /* 22 */ {743}, // ARR
-        /* 23 */ {-97, 706, -44, 706, -44, 706, -45, -55}, // range ( CONST-ENTERO , CONST-ENTERO , CONST-ENTERO )
+        /* 23 */ {820, -97, 706, -44, 706, -44, 706, -45, -55}, // range ( CONST-ENTERO , CONST-ENTERO , CONST-ENTERO ) @820
         /* 24 */ {-50, 709, 705, -49}, // { CONSTANTE B2 }
-        /* 25 */ {710, 705, -95}, //: CONSTANTE B3
-        /* 26 */ {709, 705, -44}, // , CONSTANTE B2
+        /* 25 */ {821, 710, 705, -95}, //: CONSTANTE B3 @821
+        /* 26 */ {822, 709, 705, -44}, // , CONSTANTE B2 @822
         /* 27 */ {712, 713}, // ELEVACION C1
         /* 28 */ {712, 713, -18}, // * ELEVACION C1
         /* 29 */ {712, 713, -22}, // / ELEVACION C1
@@ -129,7 +129,7 @@ public class Productions {
         /* 96 */ {-78}, // pop
         /* 97 */ {-79}, // remove
         /* 98 */ {-80}, // insert
-        /* 99 */ {-48, 745, 724, 744, -47}, // [ O1 OR O2 ]
+        /* 99 */ {823, -48, 745, 724, 744, -47}, // [ O1 OR O2 ] @823
         /* 100 */ {-15}, // -
         /* 101 */ {746, 724, 744, -95}, // : O1 OR O3
         /* 102 */ {724, 744, -95}, // : O1 OR

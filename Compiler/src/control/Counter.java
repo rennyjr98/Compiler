@@ -1,6 +1,6 @@
 package control;
 
-import design.MonitorView;
+import control.templates.Productions;
 
 public class Counter {
 	private static final int sizeOfCounts = 21;
@@ -39,8 +39,6 @@ public class Counter {
 	}
 	
 	public static void setCounter(int type) {
-		MonitorView.vitals += "Counter type : " + type + "\n\n";
-		
 		if(type == -1)
 			lexicalCounts[identificadores]++;
 		else if(type == -2 || type == -3)

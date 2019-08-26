@@ -1,6 +1,7 @@
 package control;
 
-import design.MonitorView;
+import control.templates.Error;
+import control.templates.Token;
 
 /**
  *   @author rennyjr
@@ -37,7 +38,7 @@ public class Lexico extends Analyzer {
         char actualChar;
         
         for(int i = 0; i < code.length(); i++) {
-            if(actualState == 0 && isNumerical(code.charAt(i)))
+            if(actualState == 0 && code.charAt(i) >= '0' && code.charAt(i) <= '9')
                 i = complexNumberAnalyze(code, i);
             
             actualChar = code.charAt(i);
@@ -45,7 +46,6 @@ public class Lexico extends Analyzer {
             actualColumn = calcColumn(actualChar); 
             actualState = transitionTable[actualState][actualColumn];
             actualLexema += actualChar;
-            setVitals(actualChar);
             
             if(actualState == 400) 
                 i -= responseToFailed400();
@@ -58,23 +58,6 @@ public class Lexico extends Analyzer {
             if(actualChar == '\n')
                 actualLine++;
         }
-        
-        MonitorView.vitals += "------------------------------------------------"
-                + "-----------\n\n";
-    }
-    
-    private boolean isNumerical(char actualChar) {
-    	return actualChar >= '0' && actualChar <= '9';
-    }
-    
-    private void setVitals(char actualChar) {
-        if(actualChar == ' ' || actualChar == '\n')
-            actualChar = '¨';
-        MonitorView.vitals += "[Lexico] Caracter a procesar " + actualChar +
-                "\n[Lexico] Estado actual " + actualState + "\n" +
-                "[Lexico] Lexema actual '" + actualLexema.trim() + "'\n" +
-                "[Lexico] Columna actual " + actualColumn + "\n" +
-                "\n";
     }
     
     private int calcColumn(char character) {
@@ -199,7 +182,6 @@ public class Lexico extends Analyzer {
             
             actualState = transitionTable[actualState][actualColumn];
             actualLexema += code.charAt(i);
-            setVitals(code.charAt(i));
             
             if(actualState < 0) {
                 addToken();

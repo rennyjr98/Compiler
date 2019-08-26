@@ -38,24 +38,27 @@ public class AppStyle extends JFrame {
     
     protected JTable tokensTable = new JTable(10, 3);
     protected JTable errorsTable = new JTable(10, 4);
+    protected JTable ambitTable = new JTable(10, 8);
     
     public static Font actualFont = new Font("Hack", Font.BOLD, 14);
     
     protected DefaultTableModel modelToken = new DefaultTableModel();
     protected DefaultTableModel modelError = new DefaultTableModel();
+    protected DefaultTableModel modelAmbit = new DefaultTableModel();
     
     protected JButton run = new JButton();
-    protected JButton add = new JButton();
-    protected JButton export = new JButton();
-    protected JButton settings = new JButton();
-    protected JButton monitor = new JButton();
+    protected JButton add = new JButton("\n Load");
+    protected JButton export = new JButton("\n Export Excel");
+    protected JButton loading = new JButton();
     
     
     protected JLabel titleToken = new JLabel("Tokens");
     protected JLabel titleError = new JLabel("Errors");
+    protected JLabel titleAmbit = new JLabel("Ambitos");
     
     protected JScrollPane tokenTableScroll = new JScrollPane(tokensTable);
     protected JScrollPane errorTableScroll = new JScrollPane(errorsTable);
+    protected JScrollPane ambitTableScroll = new JScrollPane(ambitTable);
     
     JPanel tableTitlesArea = new JPanel(null);
     JPanel header = new JPanel(null);
@@ -86,52 +89,58 @@ public class AppStyle extends JFrame {
         
         formatTitlesTableOnArea(titleToken);
         formatTitlesTableOnArea(titleError);
+        formatTitlesTableOnArea(titleAmbit);
         
         formatTables(tokenTableScroll, tokensTable);
         formatTables(errorTableScroll, errorsTable);
+        formatTables(ambitTableScroll, ambitTable);
         formatButtons(header);
         
         header.add(run);
         header.add(add);
         header.add(export);
-        header.add(settings);
-        header.add(monitor);
+        header.add(loading);
         
         tableTitlesArea.add(titleToken);
         tableTitlesArea.add(titleError);
+        tableTitlesArea.add(titleAmbit);
         
         main.add(header);
         main.add(codeAreaScroll);
         main.add(tableTitlesArea);
         main.add(tokenTableScroll);
         main.add(errorTableScroll);
+        main.add(ambitTableScroll);
         
         this.getContentPane().add(main);
     }
     
     protected void resizeComponent() {
         int halfScreenSize = this.getWidth()/2;
+        int thirdScreenSize = this.getWidth()/3;
         
         header.setSize(this.getWidth(), 40);
         
         codeAreaScroll.setSize(this.getWidth(), (int)(this.getHeight()*.645));
         run.setLocation(halfScreenSize-16, 4);
         add.setLocation(30, 4);
-        export.setLocation(72, 4);
-        settings.setLocation(this.getWidth()-62, 5);
-        monitor.setLocation(112, 5);
+        export.setLocation(160, 4);
+        loading.setLocation(this.getWidth() - 120, 4);
         
         tableTitlesArea.setLocation(0, (int)(this.getHeight()*.645)+40);
         tableTitlesArea.setSize(this.getWidth(), 30);
         
-        titleToken.setLocation(halfScreenSize/2-40, 5);
-        titleError.setLocation(halfScreenSize+(halfScreenSize/2), 5);
+        titleToken.setLocation(thirdScreenSize/2-40, 3);
+        titleError.setLocation(thirdScreenSize+(thirdScreenSize/2), 3);
+        titleAmbit.setLocation(thirdScreenSize*2+(thirdScreenSize/2), 3);
         
         int heighTables = this.getHeight()-tableTitlesArea.getY() - 70;
         tokenTableScroll.setLocation(0, tableTitlesArea.getY()+30);
-        tokenTableScroll.setSize(halfScreenSize, heighTables);
-        errorTableScroll.setLocation(halfScreenSize, tableTitlesArea.getY()+30);
-        errorTableScroll.setSize(halfScreenSize, heighTables);
+        tokenTableScroll.setSize(thirdScreenSize, heighTables);
+        errorTableScroll.setLocation(thirdScreenSize, tableTitlesArea.getY()+30);
+        errorTableScroll.setSize(thirdScreenSize, heighTables);
+        ambitTableScroll.setLocation(thirdScreenSize*2, tableTitlesArea.getY()+30);
+        ambitTableScroll.setSize(thirdScreenSize, heighTables);
         
         codeArea.requestFocus();
     }
@@ -221,26 +230,27 @@ public class AppStyle extends JFrame {
     protected DefaultTableModel getModel(JTable table) {
         if(table.equals(tokensTable)) 
             return modelToken;
-        return modelError;
+        else if(table.equals(errorsTable))
+        	return modelError;
+        return modelAmbit;
     }
     
     protected void formatButtons(JPanel header) {
         setIcons();
+        JButton [] controls = {run, add, export, loading};
+        int [][] sizes = {
+        		{32, 32},
+        		{150, 32},
+        		{180, 32},
+        		{180, 32}
+        };
         
-        setCleanButton(run);
-        run.setSize(32, 32);
-        
-        setCleanButton(add);
-        add.setSize(32, 32);
-        
-        setCleanButton(export);
-        export.setSize(32,32);
-        
-        setCleanButton(settings);
-        settings.setSize(32, 32);
-        
-        setCleanButton(monitor);
-        monitor.setSize(32, 32);
+        for(int i = 0; i < controls.length; i++) {
+        	setCleanButton(controls[i]);
+            controls[i].setSize(sizes[i][0], sizes[i][1]);
+            controls[i].setForeground(Color.WHITE);
+            controls[i].setFont(new Font("Fira Code Medium", Font.BOLD, 13));
+        }
     }
     
     protected void setCleanButton(JButton btn) {
@@ -253,14 +263,12 @@ public class AppStyle extends JFrame {
         Icon addIcon = new ImageIcon(prefix + "src/res/img/file.png");
         Icon runIcon = new ImageIcon(prefix + "src/res/img/play-button.png");
         Icon exportIcon = new ImageIcon(prefix + "src/res/img/download.png");
-        Icon settingsIcon = new ImageIcon(prefix + "src/res/img/settings.png");
-        Icon monitorIcon = new ImageIcon(prefix + "src/res/img/console.png");
+        Icon loadingIcon = new ImageIcon(prefix + "src/res/img/loading-bar2.gif");
         
         add.setIcon(addIcon);
         run.setIcon(runIcon);
         export.setIcon(exportIcon);
-        settings.setIcon(settingsIcon);
-        monitor.setIcon(monitorIcon);
+        loading.setIcon(loadingIcon);
     }
     
     protected void setColorToLastWord() {

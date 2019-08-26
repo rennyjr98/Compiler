@@ -1,16 +1,23 @@
 package design;
 
+import control.Ambit;
 import control.Analyzer;
 import control.Counter;
 import control.FilesManager;
 import control.Lexico;
 import control.Syntax;
-import control.Error;
-import control.Token;
+import control.templates.Error;
+import control.templates.Token;
+import database.Sql;
+import database.SqlEvent;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.text.Element;
@@ -27,26 +34,29 @@ public class App extends AppStyle implements KeyListener, ActionListener {
         super();
         preparedComponents();
         codeArea.requestFocus();
+        loading.setVisible(false);
     }
     
     public void preparedComponents() {
         String [] columnTokensTable = {"Linea", "Token", "Lexema"};
         String [] columnErrorsTable = {"Linea", "Error", "Tipo", "Descripcion",
             "Lexema"};
+        String [] columnAmbitTable = {"ID", "Tipo", "Clase", "Ambito", "Tarr", "DimArr",
+        		"noPar", "TParr"};
         
         for(int i = 0; i < columnTokensTable.length; i++) 
             modelToken.addColumn(columnTokensTable[i]);
         for(int i = 0; i < columnErrorsTable.length;i++) 
             modelError.addColumn(columnErrorsTable[i]);
+        for(int i = 0; i < columnAmbitTable.length;i++) 
+            modelAmbit.addColumn(columnAmbitTable[i]);
         
         lexico = new Lexico(FilesManager.getLexicoMatriz());
         syntax = new Syntax(FilesManager.getSyntaxMatriz());
         
         run.addActionListener(this);
         add.addActionListener(this);
-        settings.addActionListener(this);
         export.addActionListener(this);
-        monitor.addActionListener(this);
         codeArea.addKeyListener(this);
     }
     
@@ -62,52 +72,60 @@ public class App extends AppStyle implements KeyListener, ActionListener {
         if(e.isControlDown()) {
         	if(e.getKeyCode() == KeyEvent.VK_E)
         		FilesManager.exportExcel();
+        	else if(e.getKeyCode() == KeyEvent.VK_O)
+        		setNewCode();
         }
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
+    	loading.setVisible(true);
         codeLines.setText(getText());
         if(e.getKeyCode() == KeyEvent.VK_F6)
         	runCompiler();
+    	loading.setVisible(false);
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         JButton btn = (JButton)e.getSource();
+    	loading.setVisible(true);
         
         if(btn.equals(add))
             setNewCode();
         else if(btn.equals(run)) 
-                runCompiler();
-        else if(btn.equals(monitor))
-            (new MonitorView()).show();
+            runCompiler();
         else if(btn.equals(export))
         	FilesManager.exportExcel();
+    	loading.setVisible(false);
     }
     
     private void runCompiler() {
-    	long iniTime = System.currentTimeMillis();
-    	long finishTime;
+    	/*long iniTime = System.currentTimeMillis();
+    	long finishTime;*/
     	
     	try {
+    		resetCompiler();
     		runLexico();
     		runSyntax();
-    		finishTime = System.currentTimeMillis();
-    		MonitorView.vitals += "Compilation time : " + (finishTime - iniTime) + " ms\n\n";
+    		//finishTime = System.currentTimeMillis();
+    		//System.out.println("Compilation time : " + (finishTime - iniTime) + " ms\n\n");
     		
     		JOptionPane.showMessageDialog(null, "Compilacion Exitosa", 
                     "Compilacion Exitosa", JOptionPane.INFORMATION_MESSAGE);
     	}catch(Exception error) {
             JOptionPane.showMessageDialog(null, "No tengo idea que pudo salir mal.", 
                     "Error de Compilacion", JOptionPane.ERROR_MESSAGE);
-            MonitorView.vitals += "[*] Error Fatal : " + error.getMessage();
+            System.out.println(error.getMessage());
             resetCompiler();
         }
     }
     
     private void resetCompiler() {
+    	SqlEvent.deleteAll();
     	lexico.resetLexico();
+        syntax.reset();
+        Ambit.resetAmbito();
         defaultTables();
         Counter.clearCounters();
     }
@@ -118,24 +136,23 @@ public class App extends AppStyle implements KeyListener, ActionListener {
     }
     
     private void runLexico() {
-        lexico.resetLexico();
-        defaultTables();
         lexico.analyze(preparedCode());
         putTokensInTable();
     }
     
     private void runSyntax() {
         if(Analyzer.getSizeTokens() > 0) {
-            syntax.reset();
             syntax.prepareTokensForSyntax();
             syntax.analyze();
+            putErrorsInTable();
+            putAmbitInTable();
         }
-        putErrorsInTable();
     }
     
     private void defaultTables() { 
         defaultTokenTable();
         defaultErroTable();
+        defaultAmbitTable();
     }
     
     private String preparedCode() {
@@ -182,6 +199,33 @@ public class App extends AppStyle implements KeyListener, ActionListener {
             modelError.removeRow(i);
     }
     
+    private void defaultAmbitTable() {
+        int a = modelAmbit.getRowCount()-1;
+         for(int i = a; i >= 0; i--)
+            modelAmbit.removeRow(i);
+    }
+    
+    private void putAmbitInTable() {
+        String [] ar_symbol = new String[8];
+        ResultSet rs = SqlEvent.getTable();
+        
+        try {
+	        while(rs.next()) {
+	        	ar_symbol[0] = rs.getString("id");
+	        	ar_symbol[1] = rs.getString("type");
+	        	ar_symbol[2] = rs.getString("class");
+	        	ar_symbol[3] = rs.getString("ambito");
+	        	ar_symbol[4] = rs.getInt("tarr")+"";
+	        	ar_symbol[5] = rs.getInt("dimarr")+"";
+	        	ar_symbol[6] = rs.getInt("nopar")+"";
+	        	ar_symbol[7] = rs.getString("tparr");
+	            modelAmbit.addRow(ar_symbol);
+	        }
+        } catch(SQLException e) {
+        	showErrorMessage();
+        }
+    }
+    
     public String getText() {
         int caretPosition = codeArea.getDocument().getLength();
 		Element root = codeArea.getDocument().getDefaultRootElement();
@@ -189,6 +233,12 @@ public class App extends AppStyle implements KeyListener, ActionListener {
 		for(int i = 2; i < root.getElementIndex( caretPosition ) + 2; i++)
 	            text += i + "\n";
 		return text;
+    }
+    
+    public static void showErrorMessage() {
+    	JOptionPane.showMessageDialog(null, 
+				"Ups... Esto es un poco vergonzoso, no tengo idea de lo que ha ocurrido, pronto lo resolvere.",
+				"Error", JOptionPane.ERROR_MESSAGE);
     }
     
     public static void main(String ... args) {
