@@ -33,7 +33,7 @@ import javax.swing.text.TabStop;
 
 public class AppStyle extends JFrame {
     protected JTextArea codeLines = new JTextArea();
-    protected static JTextPane codeArea = new JTextPane();
+    protected static JTextArea codeArea = new JTextArea();
     protected JScrollPane codeAreaScroll = new JScrollPane(codeArea);
     
     protected JTable tokensTable = new JTable(10, 3);
@@ -202,7 +202,7 @@ public class AppStyle extends JFrame {
         StyleConstants.setForeground(attributes, Color.WHITE);
         
         int length = codeArea.getDocument().getLength();
-        codeArea.getStyledDocument().setParagraphAttributes(0, length, attributes, true);
+        //codeArea.getStyledDocument().setParagraphAttributes(0, length, attributes, true);
     }
     
     protected void formatCodeAreaScroll(JScrollPane codeAreaScroll) {
@@ -282,7 +282,7 @@ public class AppStyle extends JFrame {
         else
             colorForWord = Color.WHITE;
         
-        appendToPane(codeArea, lastWord + finalCharacter, colorForWord);
+        //appendToPane(codeArea, lastWord + finalCharacter, colorForWord);
     }
     
     protected void removeLastWord(String lastWord) {

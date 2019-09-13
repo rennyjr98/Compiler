@@ -50,19 +50,27 @@ public class Syntax extends Analyzer {
                 removeToken();
             else
                 checkCode();
-        }
+        } //System.out.println("Total de ambitos: " + Ambit.getLastAmbit());
     }
     
     private void checkCode() {
     	if(syntaxStack.peek() == 800) {
+    		if(Ambit.declarationArea)
+    			Ambit.ambitoUp();
     		syntaxStack.pop();
-    		Ambit.inDeclarationArea();
     	} else if(syntaxStack.peek() == 801) {
     		syntaxStack.pop();
     		Ambit.outDeclarationArea();
     	} else if(syntaxStack.peek() == 802) {
     		syntaxStack.pop();
-    		Ambit.inDeclarationAreaLess();
+    		Ambit.inDeclarationArea();
+    	} else if(syntaxStack.peek() == 8000) {
+    		syntaxStack.pop();
+    		Ambit.ambitoDown();
+    	} else if(syntaxStack.peek() == 8001) { 
+    		if(Ambit.declarationArea)
+    			Ambit.ambitoDown();
+			syntaxStack.pop();
     	} else if(syntaxStack.peek() > 802) {
     		forAmbit();
     	} else if(syntaxStack.peek() >= INITIAL_PRODUCTION)
@@ -74,6 +82,8 @@ public class Syntax extends Analyzer {
     private void forAmbit() {
     	if(Ambit.declarationArea)
     		forDeclarationArea();
+    	else
+    		forOutDeclarationArea();
     	
     	syntaxStack.pop();
     }
@@ -88,6 +98,10 @@ public class Syntax extends Analyzer {
     	case 807: case 808: case 809: case 810: case 811: case 812:
     	case 813: case 814: case 815: case 816: case 817:
     		Ambit.setType(syntaxStack.peek());
+    		Ambit.symbol.tempDato = copyTokenList.get(0).getLexema();
+    		Ambit.symbol.tempDato = Ambit.symbol.tempDato.replace('"', ' ');
+    		Ambit.symbol.tempDato = Ambit.symbol.tempDato.replace('\'', ' ');
+    		Ambit.symbol.tempDato = Ambit.symbol.tempDato.trim();
     		break;
     	case 818: Ambit.tArrUp(); break;
     	case 819: Ambit.setTupla(); break;
@@ -95,6 +109,24 @@ public class Syntax extends Analyzer {
     	case 821: Ambit.setDictionary(); break;
     	case 822: Ambit.setConjunto(); break;
     	case 823: Ambit.setArr(); break;
+    	case 824: Ambit.setValue(); break;
+    	case 825: Ambit.setKey(); break;
+    	case 826: Ambit.setValuesTuplas(); break;
+    	case 827: Ambit.addRange(); break;
+    	case 828: Ambit.updateRange(); break;
+    	case 829: Ambit.addAvance(); break;
+    	case 830: Ambit.setElementList(); break;
+    	}
+    }
+    
+    private void forOutDeclarationArea() {
+    	switch(syntaxStack.peek()) {
+    	case 831: SemanticOne.makeOperation(); break;
+    	case 832: 
+    		SemanticOne.checkAssing();
+    		SemanticOne.semOneArea = false;
+    		break;
+    	case 833: SemanticOne.semOneArea = true; break;
     	}
     }
     
@@ -105,23 +137,14 @@ public class Syntax extends Analyzer {
         			copyTokenList.get(0).getLexema(),
         			copyTokenList.get(0).getLine()
         		);
-        		
-        		if(!Ambit.declarationArea) {
-        			Stack<Integer> stackAmbito = Ambit.getAmbitoStack();
-        			boolean existsSymbol = false;
-        			
-        			for(int i = 0; i < stackAmbito.size(); i++) {
-        				Ambit.symbol.ambito = stackAmbito.get(i);
-	        			if(SqlEvent.ifSymbolExists(Ambit.symbol))
-	        				existsSymbol = true;
-        			}
-        			
-        			if(!existsSymbol) {
-        				Ambit.addAmbitDeclaError();
-        				Ambit.symbol.reset();
-        			}
-        		}
+        		addAmbitDeclaError();
         	}
+        	
+        	if(!Ambit.declarationArea && SemanticOne.semOneArea) { 
+        		addToOperatorPila();
+        		addToValuePila();
+        	}
+        	
             copyTokenList.remove(0);
             syntaxStack.pop();
         } else {
@@ -129,6 +152,57 @@ public class Syntax extends Analyzer {
             addError();
             syntaxStack.clear();
         }
+    }
+    
+    private void addToOperatorPila() {
+    	switch(copyTokenList.get(0).getLexema()) {
+    	case "+": case "-": case "*": case "/":
+    	case "//": case "%": case "**": case "=": 
+    	case "+=": case "-=": case "*=": case "**=":
+    	case "/=": case "//=": case "%=":
+    	case "==": case "!=": case "<": case ">":
+    	case "<=": case ">=": case "is": case "isnot":
+    	case "in": case "innot": case "!": case "||": 
+    	case "&&": case "##": case "&": case "|": case "^":
+    	case "<<": case ">>":
+    	case "++": case "--":
+    		//System.out.println("Operador: " + copyTokenList.get(0).getLexema());
+    		SemanticOne.addOperatorToPila(copyTokenList.get(0).getLexema());
+    		break;
+    	
+    	}
+    }
+    
+    private void addToValuePila() {
+    	switch(copyTokenList.get(0).getToken()) {
+    	case -1: case -9: case -5: case -4: 
+    	case -10: case -53: case -54: case -8: 
+    	case -56: case -11: case -6: case -7:
+    		//System.out.println("Valor: " + copyTokenList.get(0).getLexema());
+    		SemanticOne.addTokenToPila(copyTokenList.get(0));
+    		break;
+    	}
+    }
+    
+    private void addAmbitDeclaError() {
+    	if(!Ambit.declarationArea) {
+			Stack<Integer> stackAmbito = Ambit.getAmbitoStack();
+			boolean existsSymbol = false;
+			
+			for(int i = 0; i < stackAmbito.size(); i++) {
+				Ambit.symbol.ambito = stackAmbito.get(i);
+    			if(SqlEvent.ifSymbolExists(Ambit.symbol))
+    				existsSymbol = true;
+			}
+			
+			if(!existsSymbol) {
+				Ambit.addAmbitDeclaError(
+	        			copyTokenList.get(0).getLine());
+				/*System.out.println(copyTokenList.get(0).getLexema() + " - " +
+	        			copyTokenList.get(0).getLine());*/
+				Ambit.symbol.reset();
+			}
+		}
     }
     
     private void analyzeTransition() {
@@ -156,6 +230,7 @@ public class Syntax extends Analyzer {
     }
     
     private void loadProduction() {
+    	//System.out.println("Production: " + actualState);
         int [] production = Productions.getProduction(actualState);
         Counter.setCounterProduction(syntaxStack.peek());
         syntaxStack.pop();

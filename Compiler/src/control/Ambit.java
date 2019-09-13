@@ -22,11 +22,19 @@ public class Ambit extends Analyzer {
 		return actual_ambito;
 	}
 	
+	public static int getLastAmbit() {
+		return ambito;
+	}
+	
 	public static void setIdAmbito(String id, int line) {
 		symbol.id = id;
 		symbol.line = line;
 		symbol.ambito = actual_ambito.peek();
 		//System.out.println(id + " - " + line + " - " + actual_ambito.peek());
+	}
+	
+	public static void addToListOfType() {
+		//symbol.listDatos.add();
 	}
 	
 	public static void setType(int type) {
@@ -43,6 +51,8 @@ public class Ambit extends Analyzer {
 		case 817: symbol.type = "oct"; break;
 		}
 		
+		symbol.lineType.type = symbol.type;
+		symbol.lineType.list_per = symbol.id;
 		setVariableClass(type);
 	}
 	
@@ -77,19 +87,47 @@ public class Ambit extends Analyzer {
 		Analyzer.listError.add(new Error(symbol.line, error, type, desc, symbol.id));
 	}
 	
-	public static void addAmbitDeclaError() {
+	public static void addAmbitDeclaError(int line) {
 		int error = 691;
 		String type = "Ambito";
 		String desc = "Elemento no declarado";
-		Analyzer.listError.add(new Error(symbol.line, error, type, desc, symbol.id));
-	
+		Analyzer.listError.add(new Error(line, error, type, desc, symbol.id));
 	}
 	
 	public static void sendVariable() {
-		if(!SqlEvent.ifSymbolExists(symbol))
-			SqlEvent.sendSymbol(symbol);
-		else addAmbitDupError();
+		if(!SqlEvent.ifSymbolExists(symbol)) {
+			if(symbol.type.equals("struct") && symbol.clase.equals("list"))
+				if(isListFormatArr()) 
+					setConfFormatArr();
+			
+			SqlEvent.sendSymbol(symbol); 
+			
+			if(symbol.type.equals("struct") && !symbol.clase.equals("range")) {
+				for(int i = 0; i < symbol.listDatos.size(); i++)
+					SqlEvent.sendSymbol(symbol.listDatos.get(i));
+			}
+		} else addAmbitDupError();
 		symbol.reset();
+	}
+	
+	private static void setConfFormatArr() {
+		symbol.tarr = symbol.listDatos.size();
+		symbol.clase = "arr";
+		ambito--;
+		/*actual_ambito.pop();
+		actual_ambito.push(ambito);*/
+		symbol.listDatos.clear();
+	}
+	
+	public static boolean isListFormatArr() {
+		boolean sameType = true;
+		String type = symbol.listDatos.get(0).type;
+		for(int i = 0; i < symbol.listDatos.size(); i++) {
+			if(!type.equals(symbol.listDatos.get(i).type))
+				return false;
+		}
+		
+		return true;
 	}
 	
 	public static void sendParam() {
@@ -113,6 +151,19 @@ public class Ambit extends Analyzer {
 		symbol.type = "struct";
 	}
 	
+	public static void addRange() {
+		symbol.rango = symbol.tempDato;
+	}
+	
+	public static void updateRange() {
+		symbol.rango += "," + symbol.tempDato;
+	}
+	
+	public static void addAvance() {
+		symbol.avance = symbol.tempDato;
+		addToListOfData();
+	}
+	
 	public static void setDictionary() {
 		symbol.clase = "diccionario";
 		symbol.type = "struct";
@@ -124,27 +175,62 @@ public class Ambit extends Analyzer {
 	}
 	
 	public static void setArr() {
-		symbol.clase = "arr";
+		symbol.clase = "list";
 		symbol.type = "struct";
+		symbol.tarr = symbol.listDatos.size();
+	}
+	
+	public static void setValuesTuplas() {
+		symbol.lineType.ambito = actual_ambito.peek();
+		symbol.lineType.clase = "datoTupla";
+		addToListOfData();
+	}
+	
+	public static void setValue() {
+		symbol.lineType.value = symbol.tempDato;
+		symbol.lineType.ambito = actual_ambito.peek();
+		symbol.lineType.clase = "datoConj";
+		addToListOfData();
+	}
+	
+	public static void setKey() {
+		int actualSize = symbol.listDatos.size() - 1;
+		symbol.listDatos.get(actualSize).type = "string";
+		symbol.listDatos.get(actualSize).clase = "datoDic";
+		symbol.listDatos.get(actualSize).key = symbol.tempDato;
+	}
+	
+	public static void setElementList() {
+		symbol.lineType.value = symbol.tempDato;
+		symbol.lineType.ambito = actual_ambito.peek();
+		symbol.lineType.clase = "datoLista";
+		addToListOfData();
+	}
+	
+	public static void addToListOfData() {
+		symbol.listDatos.add(symbol.lineType);
+		symbol.newLineType();
 	}
 	
 	public static void inDeclarationArea() {
 		declarationArea = true;
-		ambito++;
-		actual_ambito.push(ambito);
 		//System.out.println("In " + Ambit.declarationArea + "\n--------");
+	}
+	
+	public static void ambitoUp() {
+		//if(declarationArea) {
+			ambito++;
+			actual_ambito.push(ambito);
+		//}
+	}
+	
+	public static void ambitoDown() {
+		actual_ambito.pop();
 	}
 	
 	public static void outDeclarationArea() {
 		declarationArea = false;
 		//System.out.println("Out " + Ambit.declarationArea + "\n--------");
-	}
-	
-	public static void inDeclarationAreaLess() {
-		declarationArea = true;
-		actual_ambito.pop();
-		//if(actual_ambito.size() > 0)
-			//System.out.println("In " + Ambit.declarationArea + "\n--------");
 	}
 	
 	public static void resetAmbito() {

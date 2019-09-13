@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -24,6 +25,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import control.templates.Error;
 import control.templates.Token;
+import database.SqlEvent;
 
 /**
  *   @author rennyjr
@@ -45,10 +47,12 @@ public class FilesManager {
     private static String extractCodeFromFile() throws IOException {
         String code = "";
         String lineOfCode = "";
-        BufferedReader br = getReader();
+        BufferedReader br = getReader(); 
+        int i= 0;
         
-        while((lineOfCode = br.readLine()) != null)
+        while((lineOfCode = br.readLine()) != null) {
             code += lineOfCode + "\n";
+        }
         return code;
     }
     
@@ -71,7 +75,7 @@ public class FilesManager {
         String dirExcelLexico = dirPrefix + "MatrizLexico.xlsx";
         
         try {
-            return extractMatrizData(dirExcelLexico, 70, 61);
+            return extractMatrizData(dirExcelLexico, 70, 61, 0);
         } catch(IOException e) {
             JOptionPane.showMessageDialog(null, 
                     "No se ha podido abrir el archivo MatrizLexico.xlsx", 
@@ -85,7 +89,7 @@ public class FilesManager {
         String dirExcelSyntax = dirPrefix + "Matrix_Sintactico.xlsx";
         
         try {
-            return extractMatrizData(dirExcelSyntax, 50, 95);
+            return extractMatrizData(dirExcelSyntax, 50, 95, 0);
         } catch(IOException e) {
             JOptionPane.showMessageDialog(null, 
                     "No se ha podido abrir el archivo MatrizLexico.xlsx", 
@@ -95,15 +99,29 @@ public class FilesManager {
         }
     }
     
+    public static String[][] getSemanticOneMatriz(int numSheet) {
+    	String dirExcelSem1 = dirPrefix + "MatricesSemantica1.xlsx";
+        
+        try {
+            return extractMatrizDataString(dirExcelSem1, 17, 17, numSheet);
+        } catch(IOException e) {
+            JOptionPane.showMessageDialog(null, 
+                    "No se ha podido abrir el archivo MatricesSemantica1.xlsx", 
+                    "Error", 
+                    JOptionPane.ERROR);
+            return null;
+        }
+    }
+    
     private static int[][] getMatrixForEmpty() {
         int [][] matrix = {{-1}};
         return matrix;
     }
     
-    private static int[][] extractMatrizData(String dirExcel, int row, int col) 
+    private static int[][] extractMatrizData(String dirExcel, int row, int col, int numSheet) 
     throws IOException {
         int [][] transitionTable = new int[row][col];
-        List rowList = extractExcelData(dirExcel);
+        List rowList = extractExcelData(dirExcel, numSheet);
         
         for(int i = 0; i < row; i++) {
             List rowOnList = (List)rowList.get(i+1);
@@ -117,8 +135,25 @@ public class FilesManager {
         return transitionTable;
     }
     
-    private static List extractExcelData(String dirExcel) throws IOException {
-        Iterator<Row> rowIterator = getExcel(dirExcel);
+    private static String[][] extractMatrizDataString(String dirExcel, int row, int col, int numSheet) 
+    	    throws IOException {
+    	        String [][] transitionTable = new String[row][col];
+    	        List rowList = extractExcelData(dirExcel, numSheet);
+    	        
+    	        for(int i = 0; i < row; i++) {
+    	            List rowOnList = (List)rowList.get(i+1);
+    	            for(int j = 0; j < col; j++) { 
+    	                String num = ((XSSFCell)rowOnList.get(j+1))
+    	                        .getStringCellValue();
+    	                transitionTable[i][j] = num.toLowerCase();
+    	            }
+    	        }
+    	        
+    	        return transitionTable;
+    	    }
+    
+    private static List extractExcelData(String dirExcel, int numSheet) throws IOException {
+        Iterator<Row> rowIterator = getExcel(dirExcel, numSheet);
         List rowList = new ArrayList();
         
         while(rowIterator.hasNext()) {
@@ -137,12 +172,12 @@ public class FilesManager {
         return rowList;
     }
     
-    private static Iterator<Row> getExcel(String dirExcel) throws IOException {
+    private static Iterator<Row> getExcel(String dirExcel, int numSheet) throws IOException {
         File fileExcel = new File(dirExcel);
         FileInputStream file = new FileInputStream(fileExcel);
         
         XSSFWorkbook workbook = new XSSFWorkbook(file);
-        XSSFSheet sheet = workbook.getSheetAt(0);
+        XSSFSheet sheet = workbook.getSheetAt(numSheet);
         
         Iterator<Row> rowIterator = sheet.iterator();
         return rowIterator;
@@ -158,6 +193,8 @@ public class FilesManager {
         tokenCountersSheet(workbook);
         tokenCounterByLine(workbook);
         productionCounterSheet(workbook);
+        AmbitCounterSheet(workbook);
+        SemanticOneCounters(workbook);
         
         try {
         	FileOutputStream out = new FileOutputStream(compileResult);
@@ -169,6 +206,7 @@ public class FilesManager {
         } catch(Exception e) {
         	JOptionPane.showMessageDialog(null, "No tengo idea de que pudo salir mal.",
         			"Error de Exportación", JOptionPane.ERROR_MESSAGE);
+        	System.out.println(e.getMessage());
         }
     }
     
@@ -190,7 +228,10 @@ public class FilesManager {
     private static void setInformationToPage(Row row, Sheet page, int [] information) {
     	for(int i = 0; i < information.length; i++) {
     		Cell celda = row.createCell(i);
-    		celda.setCellValue(information[i]);
+    		if(information[i] == -1000000)
+    			celda.setCellValue("Total");
+    		else
+    			celda.setCellValue(information[i]);
     	}
     }
     
@@ -318,6 +359,101 @@ public class FilesManager {
     	createHeaders(page, header);
     	Row row = page.createRow(1);
     	setInformationToPage(row, page, Counter.getProductionsCounter());
+    }
+    
+    private static void AmbitCounterSheet(Workbook workbook) {
+    	String pageName = "Cont Amb";
+    	String [] header = {"Ambito", "Decimal", "Binario", "Octal",
+                "Hexadecimal", "Flotante", "Cadena", "Caracter", 
+                "Compleja", "Booleana", "None", "Arreglo", "Tuplas", "Listas", "Registro", "Rango",
+                "Conjuntos", "Diccionarios", "Total/Ambito"};
+    	int [] totals = new int[19];
+    	int [] line = new int[19];
+    	
+    	Sheet page = workbook.createSheet(pageName);
+    	createHeaders(page, header);
+    	
+    	for(int i = 0; i <= Ambit.getLastAmbit(); i++) {
+    		totals[0] = line[0] = i;
+    		int [] counters = getCounterByAmbit(i);
+    		int tTotal = 0;
+    		
+    		for(int j = 0; j < counters.length; j++)
+    			tTotal += counters[j];
+    		for(int j = 1; j < counters.length+1; j++)
+    			line[j] = counters[j-1];
+    		line[18] = tTotal;
+    		
+    		Row row = page.createRow(i+1);
+    		setInformationToPage(row, page, line);
+    	}
+    	
+    	totals[0] = -1000000;
+    	int [] counters = getCounterByType();
+    	for(int j = 1; j < counters.length+1; j++)
+			totals[j] = counters[j-1];
+		totals[18] = SqlEvent.getCountTotal();
+		Row row = page.createRow(Ambit.getLastAmbit()+2);
+		setInformationToPage(row, page, totals);
+    }
+    
+    private static int[] getCounterByAmbit(int ambito) {
+    	int []counters = new int[17];
+    	counters[0] = SqlEvent.getCountByTipe("decimal", ambito);
+    	counters[1] = SqlEvent.getCountByTipe("bin", ambito);
+    	counters[2] = SqlEvent.getCountByTipe("oct", ambito);
+    	counters[3] = SqlEvent.getCountByTipe("hex", ambito);
+    	counters[4] = SqlEvent.getCountByTipe("float", ambito);
+    	counters[5] = SqlEvent.getCountByTipe("string", ambito);
+    	counters[6] = SqlEvent.getCountByTipe("char", ambito);
+    	counters[7] = SqlEvent.getCountByTipe("comp", ambito);
+    	counters[8] = SqlEvent.getCountByTipe("bool", ambito);
+    	counters[9] = SqlEvent.getCountByTipe("none", ambito);
+    	counters[10] = SqlEvent.getCountByTipe("struct", "arr", ambito);
+    	counters[11] = SqlEvent.getCountByTipe("struct", "tupla", ambito);
+    	counters[12] = SqlEvent.getCountByTipe("struct", "list", ambito);
+    	counters[13] = SqlEvent.getCountByTipe("struct", "reg", ambito);
+    	counters[14] = SqlEvent.getCountByTipe("struct", "range", ambito);
+    	counters[15] = SqlEvent.getCountByTipe("struct", "conjunto", ambito);
+    	counters[16] = SqlEvent.getCountByTipe("struct", "diccionario", ambito);
+    	return counters;
+    }
+    
+    private static int[] getCounterByType() {
+    	int []counters = new int[17];
+    	counters[0] = SqlEvent.getCountByTipeTotal("decimal");
+    	counters[1] = SqlEvent.getCountByTipeTotal("bin");
+    	counters[2] = SqlEvent.getCountByTipeTotal("oct");
+    	counters[3] = SqlEvent.getCountByTipeTotal("hex");
+    	counters[4] = SqlEvent.getCountByTipeTotal("float");
+    	counters[5] = SqlEvent.getCountByTipeTotal("string");
+    	counters[6] = SqlEvent.getCountByTipeTotal("char");
+    	counters[7] = SqlEvent.getCountByTipeTotal("comp");
+    	counters[8] = SqlEvent.getCountByTipeTotal("bool");
+    	counters[9] = SqlEvent.getCountByTipeTotal("none");
+    	counters[10] = SqlEvent.getCountByTipeTotal("struct", "arr");
+    	counters[11] = SqlEvent.getCountByTipeTotal("struct", "tupla");
+    	counters[12] = SqlEvent.getCountByTipeTotal("struct", "list");
+    	counters[13] = SqlEvent.getCountByTipeTotal("struct", "reg");
+    	counters[14] = SqlEvent.getCountByTipeTotal("struct", "range");
+    	counters[15] = SqlEvent.getCountByTipeTotal("struct", "conjunto");
+    	counters[16] = SqlEvent.getCountByTipeTotal("struct", "diccionario");
+    	return counters;
+    }
+    
+    private static void SemanticOneCounters(Workbook workbook) {
+    	String pageName = "Semantica 1 Counters";
+    	String [] header = {"Linea", "Decimal", "Binario",
+                "Octal", "Hexadecimal", "Flotante", "Cadena", 
+                "Caracter", "Compleja", "Booleana", "None", "Lista", "Rango", "Variante", "Asignacion"};
+    	
+    	Sheet page = workbook.createSheet(pageName);
+    	createHeaders(page, header);
+
+    	for(int i = 0; i < SemanticOne.semOneCounters.size(); i++) {
+        	Row row = page.createRow(i+1);
+    		setInformationToPage(row, page, SemanticOne.semOneCounters.get(i));
+    	}
     }
 }
 

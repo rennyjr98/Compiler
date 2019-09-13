@@ -55,8 +55,9 @@ public class Lexico extends Analyzer {
             } else if(actualState < 0)
                 i -= responseToToken(actualChar);
             
-            if(actualChar == '\n')
+            if(code.charAt(i) == '\n') {
                 actualLine++;
+            }
         }
     }
     
@@ -134,9 +135,9 @@ public class Lexico extends Analyzer {
                 return -51 + ((i+1)*-1);
         } 
         
-        if(actualLexema.equals("is"))
+        if(actualLexema.trim().equals("is"))
             return -98;
-        else if(actualLexema.equals("isnot"))
+        else if(actualLexema.trim().equals("isnot"))
             return -93;
         return -1;
     }

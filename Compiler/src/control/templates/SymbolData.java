@@ -1,8 +1,6 @@
 package control.templates;
 
-import java.util.LinkedList;
-
-public class Symbol {
+public class SymbolData {
 	public String id, type, clase;
 	public int ambito;
 	public String rango, avance;
@@ -13,11 +11,8 @@ public class Symbol {
 	public String list_per;
 	public int noPar;
 	public int line;
-	public String tempDato;
-	public SymbolData lineType = new SymbolData();
-	public LinkedList<SymbolData> listDatos = new LinkedList<SymbolData>();
 	
-	public Symbol() { reset(); }
+	public SymbolData() { reset(); }
 	
 	public void reset() {
 		id = type = clase = "";
@@ -27,10 +22,5 @@ public class Symbol {
 		value = nposicion = key = list_per = "";
 		noPar =  0;
 		line = 1;
-		listDatos.clear();
-	}
-	
-	public void newLineType() {
-		lineType = new SymbolData();
 	}
 }

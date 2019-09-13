@@ -5,6 +5,7 @@ import control.Analyzer;
 import control.Counter;
 import control.FilesManager;
 import control.Lexico;
+import control.SemanticOne;
 import control.Syntax;
 import control.templates.Error;
 import control.templates.Token;
@@ -41,8 +42,8 @@ public class App extends AppStyle implements KeyListener, ActionListener {
         String [] columnTokensTable = {"Linea", "Token", "Lexema"};
         String [] columnErrorsTable = {"Linea", "Error", "Tipo", "Descripcion",
             "Lexema"};
-        String [] columnAmbitTable = {"ID", "Tipo", "Clase", "Ambito", "Tarr", "DimArr",
-        		"noPar", "TParr"};
+        String [] columnAmbitTable = {"ID", "Tipo", "Clase", "Ambito", "Rango", "Avance", "Tarr", "Amb C",
+        		"Valor", "NPosicion", "LLave", "List-Per", "NPar"};
         
         for(int i = 0; i < columnTokensTable.length; i++) 
             modelToken.addColumn(columnTokensTable[i]);
@@ -53,6 +54,14 @@ public class App extends AppStyle implements KeyListener, ActionListener {
         
         lexico = new Lexico(FilesManager.getLexicoMatriz());
         syntax = new Syntax(FilesManager.getSyntaxMatriz());
+        SemanticOne.matrixSuma = FilesManager.getSemanticOneMatriz(0);
+        SemanticOne.matrixResta = FilesManager.getSemanticOneMatriz(1);
+        SemanticOne.matrixMulti = FilesManager.getSemanticOneMatriz(2);
+        SemanticOne.matrixDiv = FilesManager.getSemanticOneMatriz(3);
+        SemanticOne.matrixRel = FilesManager.getSemanticOneMatriz(4);
+        SemanticOne.matrixOper = FilesManager.getSemanticOneMatriz(5);
+        SemanticOne.matrixDespl = FilesManager.getSemanticOneMatriz(6);
+        SemanticOne.matrixDivEn = FilesManager.getSemanticOneMatriz(7);
         
         run.addActionListener(this);
         add.addActionListener(this);
@@ -126,6 +135,7 @@ public class App extends AppStyle implements KeyListener, ActionListener {
     	lexico.resetLexico();
         syntax.reset();
         Ambit.resetAmbito();
+        SemanticOne.reset();
         defaultTables();
         Counter.clearCounters();
     }
@@ -156,9 +166,9 @@ public class App extends AppStyle implements KeyListener, ActionListener {
     }
     
     private String preparedCode() {
-        String code = codeArea.getText();
+        String code = codeArea.getText().toLowerCase();
         code += '\n';
-        return code.toLowerCase();
+        return code;
     }
     
     private void putTokensInTable() {
@@ -206,7 +216,7 @@ public class App extends AppStyle implements KeyListener, ActionListener {
     }
     
     private void putAmbitInTable() {
-        String [] ar_symbol = new String[8];
+        String [] ar_symbol = new String[13];
         ResultSet rs = SqlEvent.getTable();
         
         try {
@@ -215,10 +225,15 @@ public class App extends AppStyle implements KeyListener, ActionListener {
 	        	ar_symbol[1] = rs.getString("type");
 	        	ar_symbol[2] = rs.getString("class");
 	        	ar_symbol[3] = rs.getString("ambito");
-	        	ar_symbol[4] = rs.getInt("tarr")+"";
-	        	ar_symbol[5] = rs.getInt("dimarr")+"";
-	        	ar_symbol[6] = rs.getInt("nopar")+"";
-	        	ar_symbol[7] = rs.getString("tparr");
+	        	ar_symbol[4] = rs.getString("rango");
+	        	ar_symbol[5] = rs.getString("avance");
+	        	ar_symbol[6] = rs.getInt("tarr")+"";
+	        	ar_symbol[7] = rs.getInt("tparr")+"";
+	        	ar_symbol[8] = rs.getString("value");
+	        	ar_symbol[9] = rs.getString("nposicion");
+	        	ar_symbol[10] = rs.getString("llave");
+	        	ar_symbol[11] = rs.getString("list_per");
+	        	ar_symbol[12] = rs.getInt("nopar")+"";
 	            modelAmbit.addRow(ar_symbol);
 	        }
         } catch(SQLException e) {
