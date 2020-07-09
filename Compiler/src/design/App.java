@@ -5,11 +5,10 @@ import control.Analyzer;
 import control.Counter;
 import control.FilesManager;
 import control.Lexico;
-import control.SemanticOne;
+import control.Semantic;
 import control.Syntax;
 import control.templates.Error;
 import control.templates.Token;
-import database.Sql;
 import database.SqlEvent;
 
 import java.awt.event.ActionEvent;
@@ -54,14 +53,14 @@ public class App extends AppStyle implements KeyListener, ActionListener {
         
         lexico = new Lexico(FilesManager.getLexicoMatriz());
         syntax = new Syntax(FilesManager.getSyntaxMatriz());
-        SemanticOne.matrixSuma = FilesManager.getSemanticOneMatriz(0);
-        SemanticOne.matrixResta = FilesManager.getSemanticOneMatriz(1);
-        SemanticOne.matrixMulti = FilesManager.getSemanticOneMatriz(2);
-        SemanticOne.matrixDiv = FilesManager.getSemanticOneMatriz(3);
-        SemanticOne.matrixRel = FilesManager.getSemanticOneMatriz(4);
-        SemanticOne.matrixOper = FilesManager.getSemanticOneMatriz(5);
-        SemanticOne.matrixDespl = FilesManager.getSemanticOneMatriz(6);
-        SemanticOne.matrixDivEn = FilesManager.getSemanticOneMatriz(7);
+        Semantic.getMatrix().matrixSuma = FilesManager.getSemanticOneMatriz(0);
+        Semantic.getMatrix().matrixResta = FilesManager.getSemanticOneMatriz(1);
+        Semantic.getMatrix().matrixMulti = FilesManager.getSemanticOneMatriz(2);
+        Semantic.getMatrix().matrixDiv = FilesManager.getSemanticOneMatriz(3);
+        Semantic.getMatrix().matrixRel = FilesManager.getSemanticOneMatriz(4);
+        Semantic.getMatrix().matrixOper = FilesManager.getSemanticOneMatriz(5);
+        Semantic.getMatrix().matrixDespl = FilesManager.getSemanticOneMatriz(6);
+        Semantic.getMatrix().matrixDivEn = FilesManager.getSemanticOneMatriz(7);
         
         run.addActionListener(this);
         add.addActionListener(this);
@@ -125,8 +124,8 @@ public class App extends AppStyle implements KeyListener, ActionListener {
     	}catch(Exception error) {
             JOptionPane.showMessageDialog(null, "No tengo idea que pudo salir mal.", 
                     "Error de Compilacion", JOptionPane.ERROR_MESSAGE);
-            System.out.println(error.getMessage());
-            resetCompiler();
+            System.out.println(error.getMessage() + "\n linea: " + Syntax.actualLine);
+            //resetCompiler();
         }
     }
     
@@ -135,7 +134,7 @@ public class App extends AppStyle implements KeyListener, ActionListener {
     	lexico.resetLexico();
         syntax.reset();
         Ambit.resetAmbito();
-        SemanticOne.reset();
+        Semantic.reset();
         defaultTables();
         Counter.clearCounters();
     }

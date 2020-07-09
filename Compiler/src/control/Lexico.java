@@ -1,6 +1,8 @@
 package control;
 
 import control.templates.Error;
+import control.templates.Etiqueta;
+import control.templates.SemanticTypes;
 import control.templates.Token;
 
 /**
@@ -157,7 +159,7 @@ public class Lexico extends Analyzer {
     }
     
     private void addToken() {
-        Token token = new Token(actualLine, actualState, actualLexema.trim());
+        Token token = new Token(actualLine, actualState, actualLexema.trim().replace("'", "").replace("\"", ""));
         Analyzer.listToken.add(token);
     }
     
@@ -229,6 +231,12 @@ public class Lexico extends Analyzer {
     public void cleanLists() {
         Analyzer.listToken.clear();
         Analyzer.listError.clear();
+        Analyzer.listCuad.clear();
+        Etiqueta.IF_ETQ = 0;
+        Etiqueta.WHILE_ETQ = 0;
+        Etiqueta.FOR_ETQ = 0;
+        Etiqueta.FOR_ID = 0;
+        SemanticTypes.reset();
     }
     
     public static boolean isSpecialWord(String word) {

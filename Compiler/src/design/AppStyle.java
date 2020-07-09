@@ -259,7 +259,7 @@ public class AppStyle extends JFrame {
     }
     
     protected void setIcons() {
-    	String prefix = "/home/rennyjr/NetBeansProjects/Compiler/Compiler/";
+    	String prefix = "/home/rennyjr/eclipse-workspace/Compiler/Compiler/";
         Icon addIcon = new ImageIcon(prefix + "src/res/img/file.png");
         Icon runIcon = new ImageIcon(prefix + "src/res/img/play-button.png");
         Icon exportIcon = new ImageIcon(prefix + "src/res/img/download.png");

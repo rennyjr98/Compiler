@@ -3,8 +3,10 @@ package control;
 import java.util.LinkedList;
 import java.util.Stack;
 
+import control.templates.Cuadruplo;
 import control.templates.Error;
 import control.templates.Productions;
+import control.templates.SemanticTable;
 import control.templates.Token;
 import database.SqlEvent;
 
@@ -16,11 +18,12 @@ public class Syntax extends Analyzer {
     private Integer actualState;
     private int [][] transitionTable;
     private Stack<Integer> syntaxStack;
+    public static int actualLine = 1;
     private LinkedList<Token> copyTokenList = new LinkedList<Token>();
     
     private final int token$ = -100;
     private final int COMMENT = -2;
-    private final int EPSILON = 125;
+    private final int EPSILON = 200;
     private final int ERROR_INITIAL = 600;
     private final int EST_EPSILON = 736;
     private final int INITIAL_PRODUCTION = 701;
@@ -59,11 +62,13 @@ public class Syntax extends Analyzer {
     			Ambit.ambitoUp();
     		syntaxStack.pop();
     	} else if(syntaxStack.peek() == 801) {
+    		if(Ambit.methodsStack.empty() && Analyzer.listError.isEmpty())
+    			Analyzer.listCuad.add(new Cuadruplo("PPAL", "Main:", "", "", ""));
     		syntaxStack.pop();
     		Ambit.outDeclarationArea();
     	} else if(syntaxStack.peek() == 802) {
     		syntaxStack.pop();
-    		Ambit.inDeclarationArea();
+    		Ambit.inDeclarationArea(); 
     	} else if(syntaxStack.peek() == 8000) {
     		syntaxStack.pop();
     		Ambit.ambitoDown();
@@ -71,12 +76,41 @@ public class Syntax extends Analyzer {
     		if(Ambit.declarationArea)
     			Ambit.ambitoDown();
 			syntaxStack.pop();
+    	} else if(syntaxStack.peek() == 8002) {
+    		if(Analyzer.listError.isEmpty() && !Ambit.methodsStack.empty())
+    			Analyzer.listCuad.add(new Cuadruplo("Enddef", "", "", "", ""));
+    		addMethodRule();
     	} else if(syntaxStack.peek() > 802) {
     		forAmbit();
     	} else if(syntaxStack.peek() >= INITIAL_PRODUCTION)
             analyzeTransition();
-        else
+    	else
             analyzeMatches();
+    }
+    
+    private void addMethodRule() {
+    	if(Ambit.methodsStack != null && !Ambit.methodsStack.empty()) {
+			if(Semantic.returnSomething) {
+				SemanticTable.addRule(
+					"1140", 
+					"OR", 
+					SqlEvent.getReturns(Ambit.methodsStack.get(Ambit.methodsStack.size()-1).id, 
+					Ambit.methodsStack.get(Ambit.methodsStack.size()-1).ambito,
+					Ambit.methodsStack.get(Ambit.methodsStack.size()-1).line),
+					Ambit.methodsStack.get(Ambit.methodsStack.size()-1).line, 
+					"ACEPTA", 
+					Ambit.methodsStack.get(Ambit.methodsStack.size()-1).ambito);
+			} else {
+				SemanticTable.addRule(
+					"1150", 
+					"OR", 
+					"", 
+					Ambit.methodsStack.get(Ambit.methodsStack.size()-1).line, 
+					"ACEPTA", 
+					Ambit.methodsStack.get(Ambit.methodsStack.size()-1).ambito);
+			} Semantic.returnSomething = false;
+			Ambit.methodsStack.pop();
+		} syntaxStack.pop();
     }
     
     private void forAmbit() {
@@ -84,7 +118,6 @@ public class Syntax extends Analyzer {
     		forDeclarationArea();
     	else
     		forOutDeclarationArea();
-    	
     	syntaxStack.pop();
     }
     
@@ -98,10 +131,8 @@ public class Syntax extends Analyzer {
     	case 807: case 808: case 809: case 810: case 811: case 812:
     	case 813: case 814: case 815: case 816: case 817:
     		Ambit.setType(syntaxStack.peek());
+    		Ambit.symbol.tempToken = copyTokenList.get(0);
     		Ambit.symbol.tempDato = copyTokenList.get(0).getLexema();
-    		Ambit.symbol.tempDato = Ambit.symbol.tempDato.replace('"', ' ');
-    		Ambit.symbol.tempDato = Ambit.symbol.tempDato.replace('\'', ' ');
-    		Ambit.symbol.tempDato = Ambit.symbol.tempDato.trim();
     		break;
     	case 818: Ambit.tArrUp(); break;
     	case 819: Ambit.setTupla(); break;
@@ -116,21 +147,68 @@ public class Syntax extends Analyzer {
     	case 828: Ambit.updateRange(); break;
     	case 829: Ambit.addAvance(); break;
     	case 830: Ambit.setElementList(); break;
+    	case 841: 
+    		Ambit.lessCounter++;
+    		Ambit.lessSymbolAparition();
+    		break;
     	}
     }
     
     private void forOutDeclarationArea() {
     	switch(syntaxStack.peek()) {
-    	case 831: SemanticOne.makeOperation(); break;
-    	case 832: 
-    		SemanticOne.checkAssing();
-    		SemanticOne.semOneArea = false;
+    	case 827: Semantic.addRange(); break;
+    	case 828: Semantic.updateRange(); break;
+    	case 829: Semantic.addAvance(); break;
+    	case 830: Semantic.arrElementUp(); break;
+    	case 831: Semantic.makeOperation(); break;
+    	case 832: Semantic.checkAssingRule(); break;
+    	case 833: Semantic.checkLogicalResultRule(0); break;
+    	case 834: Semantic.checkLogicalResultRule(1); break;
+    	case 835: Semantic.checkStructRules(); break;
+    	case 836: Semantic.checkLogicalResultRule(2); break;
+    	case 837: Semantic.updateReturns(); break;
+    	case 838: Semantic.methodElementUp(); break;
+    	case 839: Semantic.checkParamSize(); break;
+    	case 840: Semantic.checkFor(); break;
+    	case 841: 
+    		Semantic.lessAparitions = true;
+    		Semantic.lessCounter++;
     		break;
-    	case 833: SemanticOne.semOneArea = true; break;
+    	case 842: Semantic.outPrints("print"); break;
+    	case 843: Semantic.functions.checkFindall(); break;
+    	case 845: Semantic.functions.checkLen(); break;
+    	case 846: Semantic.functions.checkSample(); break;
+    	case 847: Semantic.functions.checkChoice(); break;
+    	case 848: Semantic.functions.checkRandRange(); break;
+    	case 849: Semantic.functions.checkMeanVariance("mean"); break;
+    	case 850: Semantic.functions.checkMeanVariance("variance"); break;
+    	case 851: Semantic.functions.checkSum(); break;
+    	case 852: Semantic.functions.checkSort(); break;
+    	case 853: Semantic.functions.checkReverse(); break;
+    	case 854: Semantic.functions.checkCount(); break;
+    	case 855: Semantic.functions.checkIndex(); break;
+    	case 856: Semantic.functions.checkAppend(); break;
+    	case 857: Semantic.functions.checkExtend(); break;
+    	case 858: Semantic.functions.checkPop(); break;
+    	case 859: Semantic.functions.checkRemove(); break;
+    	case 860: Semantic.functions.checkInsert(); break;
+    	case 861: Semantic.functions.checkReplace(); break;
+    	case 862: Semantic.outPrints("println"); break;
+    	case 863: Semantic.addCuadEnd(); break;
+    	case 864: Semantic.addCuadIfETQ(); break;
+    	case 865: Semantic.addCuadElif("elif"); break;
+    	case 866: Semantic.addCuadElse(); break;
+    	case 867: Semantic.addCuadIfJMP(); break;
+    	case 868: Semantic.addCuadWhileETQ(); break;
+    	case 869: Semantic.addCuadWhileJMP(); break;
+    	case 870: Semantic.addCuadFinalFor(); break;
+    	case 871: Semantic.addCuadEndIf(); break;
+    	case 872: Semantic.addCuadJMP(); break;
     	}
     }
     
-    private void analyzeMatches() {
+    private void analyzeMatches() { //System.out.println("ACTUAL LINE: " + copyTokenList.get(0).getLine());
+    	//System.out.println("Token actual : " + copyTokenList.get(0).getToken() + " , " + copyTokenList.get(0).getLexema());
         if(syntaxStack.peek() == copyTokenList.get(0).getToken()) {
         	if(syntaxStack.peek() == -1) {
         		Ambit.setIdAmbito(
@@ -140,7 +218,7 @@ public class Syntax extends Analyzer {
         		addAmbitDeclaError();
         	}
         	
-        	if(!Ambit.declarationArea && SemanticOne.semOneArea) { 
+        	if(!Ambit.declarationArea) { 
         		addToOperatorPila();
         		addToValuePila();
         	}
@@ -167,7 +245,7 @@ public class Syntax extends Analyzer {
     	case "<<": case ">>":
     	case "++": case "--":
     		//System.out.println("Operador: " + copyTokenList.get(0).getLexema());
-    		SemanticOne.addOperatorToPila(copyTokenList.get(0).getLexema());
+    		Semantic.addOperatorToPila(copyTokenList.get(0).getLexema());
     		break;
     	
     	}
@@ -179,7 +257,7 @@ public class Syntax extends Analyzer {
     	case -10: case -53: case -54: case -8: 
     	case -56: case -11: case -6: case -7:
     		//System.out.println("Valor: " + copyTokenList.get(0).getLexema());
-    		SemanticOne.addTokenToPila(copyTokenList.get(0));
+    		Semantic.addTokenToPila(copyTokenList.get(0));
     		break;
     	}
     }
@@ -201,13 +279,14 @@ public class Syntax extends Analyzer {
 				/*System.out.println(copyTokenList.get(0).getLexema() + " - " +
 	        			copyTokenList.get(0).getLine());*/
 				Ambit.symbol.reset();
-			}
+			} else
+				SemanticTable.addRule("1130", "id", copyTokenList.get(0).getLexema(), copyTokenList.get(0).getLine(), "ACEPTA", Ambit.getAmbitoStack().peek());
 		}
     }
     
     private void analyzeTransition() {
         actualState = getFromMatrix();
-        
+        actualLine = copyTokenList.get(copyTokenList.size()-1).getLine();
         if(actualState != EPSILON && actualState < ERROR_INITIAL) 
         	loadProduction();
         else if(actualState == EPSILON) {

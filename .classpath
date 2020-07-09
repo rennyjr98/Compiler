@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="Compiler/src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
+	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
 		<attributes>
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/home/rennyjr/Documents/Resources/Excel Java/commons-collections4-4.1.jar"/>
-	<classpathentry kind="lib" path="/home/rennyjr/Documents/Resources/Excel Java/poi-3.16.jar"/>
-	<classpathentry kind="lib" path="/home/rennyjr/Documents/Resources/Excel Java/poi-ooxml-3.16.jar"/>
-	<classpathentry kind="lib" path="/home/rennyjr/Documents/Resources/Excel Java/poi-ooxml-schemas-3.16.jar"/>
-	<classpathentry kind="lib" path="/home/rennyjr/Documents/Resources/Excel Java/xmlbeans-2.6.0.jar"/>
-	<classpathentry kind="lib" path="/home/rennyjr/Documents/Resources/Java Database/mysql-connector-java-5.1.18.jar"/>
+	<classpathentry exported="true" kind="lib" path="/home/rennyjr/Documents/Resources/Excel-Jar/commons-collections4-4.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="/home/rennyjr/Documents/Resources/Excel-Jar/poi-3.16.jar"/>
+	<classpathentry exported="true" kind="lib" path="/home/rennyjr/Documents/Resources/Excel-Jar/poi-ooxml-3.16.jar"/>
+	<classpathentry exported="true" kind="lib" path="/home/rennyjr/Documents/Resources/Excel-Jar/poi-ooxml-schemas-3.16.jar"/>
+	<classpathentry exported="true" kind="lib" path="/home/rennyjr/Documents/Resources/Excel-Jar/xmlbeans-2.6.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="/home/rennyjr/Documents/Resources/Sql-Connector-Jar/mysql-connector-java-8.0.11.jar"/>
 	<classpathentry kind="output" path="Compiler/build/classes"/>
 </classpath>

@@ -26,4 +26,16 @@ public class Token {
     public String getLexema() {
         return lexema;
     }
+    
+    public void setLine(int line) {
+    	this.line = line;
+    }
+    
+    public void setToken(int token) {
+    	this.token = token;
+    }
+    
+    public void setLexema(String lexema) {
+    	this.lexema = lexema;
+    }
 }

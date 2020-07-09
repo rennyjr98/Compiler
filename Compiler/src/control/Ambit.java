@@ -3,13 +3,21 @@ package control;
 import java.util.Stack;
 
 import control.templates.Symbol;
+import control.templates.SymbolData;
+import control.templates.Token;
+import control.templates.Cuadruplo;
 import control.templates.Error;
+import control.templates.SemanticTable;
 import database.SqlEvent;
 
 public class Ambit extends Analyzer {
 	public static boolean declarationArea = true;
 	private static int ambito = 0;
+	private static boolean lessSymbol = false;
+	public static int lessCounter = 0;
+	public static boolean sendArr = true;
 	public static Symbol symbol = new Symbol();
+	public static Stack<Symbol> methodsStack = new Stack<Symbol>();
 	private static Stack<Integer> actual_ambito = new Stack<Integer>();
 	
 	public static void init() {
@@ -74,10 +82,23 @@ public class Ambit extends Analyzer {
 		symbol.clase = "func";
 		symbol.type = "none";
 
-		if(!SqlEvent.ifSymbolExists(symbol))
+		if(!SqlEvent.ifSymbolExists(symbol)) {
 			SqlEvent.sendSymbol(symbol);
-		else addAmbitDupError();
+			methodsStack.add(getCopyOfSymbol());
+			SemanticTable.addRule("1130", "id", symbol.id, symbol.line, "ACEPTA", Ambit.getAmbitoStack().peek());
+			Analyzer.listCuad.add(new Cuadruplo("def", symbol.id + ":", "", "", ""));
+		} else { 
+			addAmbitDupError();
+			SemanticTable.addRule("1130", "id", symbol.id, symbol.line, "ERROR", Ambit.getAmbitoStack().peek());
+		}
 		symbol.reset();
+	}
+	
+	private static Symbol getCopyOfSymbol() {
+		Symbol method = new Symbol();
+		method.ambito = symbol.ambito;
+		method.id = symbol.id;
+		return method;
 	}
 	
 	private static void addAmbitDupError() {
@@ -92,35 +113,48 @@ public class Ambit extends Analyzer {
 		String type = "Ambito";
 		String desc = "Elemento no declarado";
 		Analyzer.listError.add(new Error(line, error, type, desc, symbol.id));
+		SemanticTable.addRule("1130", "id", symbol.id, symbol.line, "ERROR", Ambit.getAmbitoStack().peek());
 	}
 	
 	public static void sendVariable() {
 		if(!SqlEvent.ifSymbolExists(symbol)) {
-			if(symbol.type.equals("struct") && symbol.clase.equals("list"))
+			if(symbol.type.equals("struct") && symbol.clase.equals("list")) {
 				if(isListFormatArr()) 
 					setConfFormatArr();
+			} if(symbol.type.equals("struct"))
+				if(symbol.TParr == 0)
+					symbol.TParr = 1;
 			
 			SqlEvent.sendSymbol(symbol); 
+			SemanticTable.addRule("1130", "id", symbol.id, symbol.line, "ACEPTA", Ambit.getAmbitoStack().peek());
 			
 			if(symbol.type.equals("struct") && !symbol.clase.equals("range")) {
+				setPositions();
 				for(int i = 0; i < symbol.listDatos.size(); i++)
 					SqlEvent.sendSymbol(symbol.listDatos.get(i));
 			}
-		} else addAmbitDupError();
+		} else { 
+			addAmbitDupError();
+			SemanticTable.addRule("1130", "id", symbol.id, symbol.line, "ERROR", Ambit.getAmbitoStack().peek());
+		}
 		symbol.reset();
 	}
 	
+	private static void setPositions() {
+		for(int i = 0; i < symbol.listDatos.size(); i++)
+			symbol.listDatos.get(i).nposicion = i + "";
+	}
+	
 	private static void setConfFormatArr() {
-		symbol.tarr = symbol.listDatos.size();
 		symbol.clase = "arr";
 		ambito--;
-		/*actual_ambito.pop();
-		actual_ambito.push(ambito);*/
-		symbol.listDatos.clear();
+		Semantic.checkDimensionStruct(symbol);
+		
+		for(SymbolData symbol : symbol.listDatos)
+			symbol.ambito = ambito;
 	}
 	
 	public static boolean isListFormatArr() {
-		boolean sameType = true;
 		String type = symbol.listDatos.get(0).type;
 		for(int i = 0; i < symbol.listDatos.size(); i++) {
 			if(!type.equals(symbol.listDatos.get(i).type))
@@ -133,11 +167,16 @@ public class Ambit extends Analyzer {
 	public static void sendParam() {
 		symbol.clase = "param";
 		symbol.type = "none";
+		symbol.list_per = methodsStack.peek().id;
 		
 		if(!SqlEvent.ifSymbolExists(symbol)) {
 			SqlEvent.sendSymbol(symbol);
-			SqlEvent.upParam(symbol);
-		} else addAmbitDupError();
+			SemanticTable.addRule("1130", "Param", symbol.id, symbol.line, "ACEPTA", Ambit.getAmbitoStack().peek());
+			SqlEvent.upParam(methodsStack.peek());
+		} else { 
+			addAmbitDupError();
+			SemanticTable.addRule("1130", "Param", symbol.id, symbol.line, "ERROR", Ambit.getAmbitoStack().peek());
+		}
 		symbol.reset();
 	}
 	
@@ -152,16 +191,26 @@ public class Ambit extends Analyzer {
 	}
 	
 	public static void addRange() {
+		if(lessSymbol)
+			symbol.tempDato = "-" + symbol.tempDato;
 		symbol.rango = symbol.tempDato;
+		lessSymbol = false;
 	}
 	
 	public static void updateRange() {
+		if(lessSymbol)
+			symbol.tempDato = "-" + symbol.tempDato;
 		symbol.rango += "," + symbol.tempDato;
+		lessSymbol = false;
 	}
 	
 	public static void addAvance() {
+		if(lessSymbol)
+			symbol.tempDato = "-" + symbol.tempDato;
 		symbol.avance = symbol.tempDato;
+		lessSymbol = false;
 		addToListOfData();
+		Semantic.checkDimensionRange(symbol);
 	}
 	
 	public static void setDictionary() {
@@ -183,45 +232,57 @@ public class Ambit extends Analyzer {
 	public static void setValuesTuplas() {
 		symbol.lineType.ambito = actual_ambito.peek();
 		symbol.lineType.clase = "datoTupla";
+		symbol.lineType.ambito_padre = symbol.ambito + "";
 		addToListOfData();
 	}
 	
 	public static void setValue() {
 		symbol.lineType.value = symbol.tempDato;
 		symbol.lineType.ambito = actual_ambito.peek();
+		symbol.lineType.ambito_padre = symbol.ambito + "";
 		symbol.lineType.clase = "datoConj";
 		addToListOfData();
 	}
 	
 	public static void setKey() {
 		int actualSize = symbol.listDatos.size() - 1;
-		symbol.listDatos.get(actualSize).type = "string";
 		symbol.listDatos.get(actualSize).clase = "datoDic";
 		symbol.listDatos.get(actualSize).key = symbol.tempDato;
+		symbol.listDatos.get(actualSize).key_type = symbol.tempToken.getToken();
+		symbol.listDatos.get(actualSize).ambito_padre = symbol.ambito + "";
 	}
 	
 	public static void setElementList() {
 		symbol.lineType.value = symbol.tempDato;
 		symbol.lineType.ambito = actual_ambito.peek();
 		symbol.lineType.clase = "datoLista";
+		symbol.lineType.ambito_padre = symbol.ambito + "";
 		addToListOfData();
 	}
 	
 	public static void addToListOfData() {
+		if(lessSymbol)
+			symbol.lineType.value = "-" + symbol.lineType.value; 
 		symbol.listDatos.add(symbol.lineType);
 		symbol.newLineType();
+		lessSymbol = false;
+	}
+	
+	public static void lessSymbolAparition() {
+		lessSymbol = true;
+	}
+	
+	public static void turnOfLessSymbolAparition() {
+		lessSymbol = false;
 	}
 	
 	public static void inDeclarationArea() {
 		declarationArea = true;
-		//System.out.println("In " + Ambit.declarationArea + "\n--------");
 	}
 	
 	public static void ambitoUp() {
-		//if(declarationArea) {
-			ambito++;
-			actual_ambito.push(ambito);
-		//}
+		ambito++;
+		actual_ambito.push(ambito);
 	}
 	
 	public static void ambitoDown() {
@@ -230,7 +291,6 @@ public class Ambit extends Analyzer {
 	
 	public static void outDeclarationArea() {
 		declarationArea = false;
-		//System.out.println("Out " + Ambit.declarationArea + "\n--------");
 	}
 	
 	public static void resetAmbito() {
@@ -239,5 +299,6 @@ public class Ambit extends Analyzer {
 		symbol = new Symbol();
 		actual_ambito.clear();
 		actual_ambito.add(ambito);
+		lessCounter = 0;
 	}
 }

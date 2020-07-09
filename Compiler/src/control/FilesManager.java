@@ -7,12 +7,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -23,9 +26,12 @@ import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import control.templates.Cuadruplo;
 import control.templates.Error;
+import control.templates.SemanticTable;
 import control.templates.Token;
 import database.SqlEvent;
+import design.App;
 
 /**
  *   @author rennyjr
@@ -34,7 +40,7 @@ import database.SqlEvent;
 public class FilesManager {
     private static JFileChooser explorer = new JFileChooser();
     private static String dirPrefix = 
-            "/home/rennyjr/NetBeansProjects/Compiler/Compiler/src/res/";
+            "/home/rennyjr/eclipse-workspace/Compiler/Compiler/src/res/";
     
     public static String getCode() {
         try {
@@ -53,7 +59,23 @@ public class FilesManager {
         while((lineOfCode = br.readLine()) != null) {
             code += lineOfCode + "\n";
         }
+        analyzeCharInvisible(code);
         return code;
+    }
+    
+    private static void analyzeCharInvisible(String code) {
+    	try {
+            File file = new File(pathname);
+            
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            
+            FileWriter fw = new FileWriter(file);
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.write(code);
+            bw.close();
+        } catch (Exception e) { }
     }
     
     private static BufferedReader getReader() throws IOException {
@@ -195,6 +217,9 @@ public class FilesManager {
         productionCounterSheet(workbook);
         AmbitCounterSheet(workbook);
         SemanticOneCounters(workbook);
+        SymbolTable(workbook);
+        SemanticTwoCounters(workbook);
+        CuadruplosCounters(workbook);
         
         try {
         	FileOutputStream out = new FileOutputStream(compileResult);
@@ -450,11 +475,84 @@ public class FilesManager {
     	Sheet page = workbook.createSheet(pageName);
     	createHeaders(page, header);
 
-    	for(int i = 0; i < SemanticOne.semOneCounters.size(); i++) {
+    	for(int i = 0; i < Semantic.getCounter().size(); i++) {
         	Row row = page.createRow(i+1);
-    		setInformationToPage(row, page, SemanticOne.semOneCounters.get(i));
+    		setInformationToPage(row, page, Semantic.getCounter().get(i));
     	}
     }
+    
+    private static void SymbolTable(Workbook workbook) {
+    	String pageName = "Symbol Table";
+    	String [] header = {"ID", "Tipo", "Clase",
+                "Ambito", "Rango", "Avance", "Tamaño Arreglo", 
+                "Dimension Arreglo", "Value", "Posicion", "Llave", "Lista Pertenece", "No. Parametro", "Tipo Llave", "Return"};
+    	
+    	Sheet page = workbook.createSheet(pageName);
+    	createHeaders(page, header);
+    	
+    	ResultSet tableAmbit = SqlEvent.getTable();
+    	int i = 0;
+    	try {
+	    	while(tableAmbit.next()) {
+	    		Row row = page.createRow(i+1);
+	    		String data [] = {
+	    				tableAmbit.getString("id"),
+	    				tableAmbit.getString("type"),
+	    				tableAmbit.getString("class"),
+	    				tableAmbit.getInt("ambito")+"",
+	    				tableAmbit.getString("rango"),
+	    				tableAmbit.getString("avance"),
+	    				tableAmbit.getInt("tarr")+"",
+	    				tableAmbit.getInt("tparr")+"",
+	    				tableAmbit.getString("value"),
+	    				tableAmbit.getString("nposicion"),
+	    				tableAmbit.getString("llave"),
+	    				tableAmbit.getString("list_per"),
+	    				tableAmbit.getInt("nopar")+"",
+	    				tableAmbit.getString("llave_type"),
+	    				tableAmbit.getString("data_return"),
+	    		};
+	    		setInformationToPage(row, page, data);
+	    		i++;
+	    	}
+    	} catch(SQLException e) {
+    		App.showErrorMessage();
+    		System.out.println(e.getMessage());
+    	}
+    }
+    
+    private static void SemanticTwoCounters(Workbook workbook) {
+    	String pageName = "Semantica 2 Counters";
+    	String [] header = {"Regla", "Tope Pila", "Valor Real",
+                "Linea", "Estado", "Ambito"};
+    	
+    	Sheet page = workbook.createSheet(pageName);
+    	createHeaders(page, header);
+
+    	for(int i = 0; i < SemanticTable.table.size(); i++) {
+        	Row row = page.createRow(i+1);
+    		setInformationToPage(row, page, SemanticTable.table.get(i).getSymbolConvertered());
+    	}
+    }
+    
+    private static void CuadruplosCounters(Workbook workbook) {
+    	String pageName = "Cuadruplos Counters";
+    	String [] header = {"Etiqueta", "Accion", "Arg1",
+                "Arg2", "Result"};
+    	
+    	Sheet page = workbook.createSheet(pageName);
+    	createHeaders(page, header);
+    	
+		if(Analyzer.listError.isEmpty())
+			Analyzer.listCuad.add(new Cuadruplo("ENDMAIN", "", "", "", ""));
+
+    	for(int i = 0; i < Analyzer.listCuad.size(); i++) {
+        	Row row = page.createRow(i+1);
+    		setInformationToPage(row, page, Analyzer.listCuad.get(i).getSymbolConvertered());
+    	}
+    }
+    
+    private static String pathname = "/home/rennyjr/Documents/School/Requerimientos/bibliografia_ensayo.txt";
 }
 
     

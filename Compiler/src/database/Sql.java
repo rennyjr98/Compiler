@@ -5,7 +5,7 @@ import java.sql.*;
 import javax.swing.JOptionPane;
 
 public class Sql {
-    protected String driver = "com.mysql.jdbc.Driver";
+    protected String driver = "com.mysql.cj.jdbc.Driver";
     protected String database = "compi";
     protected String hostname = "localhost";
     protected String port = "3306";

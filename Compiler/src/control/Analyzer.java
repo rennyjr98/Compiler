@@ -2,6 +2,7 @@ package control;
 
 import java.util.LinkedList;
 
+import control.templates.Cuadruplo;
 import control.templates.Error;
 import control.templates.Token;
 import database.SqlEvent;
@@ -13,6 +14,7 @@ import database.SqlEvent;
 public class Analyzer {
     protected static LinkedList<Token> listToken;
     protected static LinkedList<Error> listError;
+    protected static LinkedList<Cuadruplo> listCuad;
     protected static SqlEvent sqlEvent = new SqlEvent();
     
     // Mapeo para contadores
@@ -20,6 +22,7 @@ public class Analyzer {
     public Analyzer() {
         listToken = new LinkedList<Token>();
         listError = new LinkedList<Error>();
+        listCuad = new LinkedList<Cuadruplo>();
     }
     
     public void setToken(Token token) {
